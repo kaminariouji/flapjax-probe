@@ -1,0 +1,67 @@
+{
+  "block": 127068842,
+  "rpc": "https://bsc-rpc.publicnode.com",
+  "checks": {
+    "token": {
+      "name": "FlapJax",
+      "symbol": "FLAPJAX",
+      "owner": "0x0000000000000000000000000000000000000000"
+    },
+    "treasury": {
+      "fj": "237237297806810631976334347",
+      "fjM": "237.24M",
+      "bnb": "0.144640083559380905"
+    },
+    "primary": {
+      "pool": "0xcA93EC685b8623688E6B236f9068034B298c2150",
+      "token0": "0x90c8889f428F9Ebb77BB8f15CAD3a50a9aC680df",
+      "token1": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+      "fjHeld": "20.23B",
+      "liquidity": "320678316678999036604866",
+      "sqrtPriceX96": "1613473238700077591767816",
+      "tick": -216045,
+      "counter": "WBNB"
+    },
+    "secondary": {
+      "pool": "0x740a3b4a91cb8fa47e85d7f9713ca6ec2f8a037e",
+      "token0": "0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c",
+      "token1": "0x90c8889f428F9Ebb77BB8f15CAD3a50a9aC680df",
+      "fjHeld": "7.02B",
+      "liquidity": "6818803123799238491208",
+      "sqrtPriceX96": "37194775522805716482780734956756258",
+      "tick": 261199,
+      "counter": "BTCB"
+    },
+    "lock101": {
+      "id": "101",
+      "nftContract": "0x46A15B0b27311cedF172AB29E4f4766fbE7F4364",
+      "pool": "0xcA93EC685b8623688E6B236f9068034B298c2150",
+      "tokenId": "1456181",
+      "lockDate": "2024-12-05T13:13:21.000Z",
+      "unlockDate": "2034-12-03T13:13:21.000Z",
+      "unlockTs": "2048764401",
+      "nftContractIsNPM": true,
+      "poolIsPrimary": true
+    },
+    "nftOwner1456181": {
+      "owner": "0x25c9C4B56E820e0DEA438b145284F02D9Ca9Bd52",
+      "isLocker": true
+    },
+    "position1456181": {
+      "fee": 10000,
+      "tickLower": -887200,
+      "tickUpper": 887200,
+      "liquidity": "320678316678999036604866",
+      "liquidityEqualsPool": true,
+      "tokensOwedFJ": "843345063316970756060730",
+      "tokensOwedFJhuman": "843345.063",
+      "tokensOwedWBNB": "281560791883818182",
+      "tokensOwedWBNBhuman": "0.281561"
+    },
+    "ourBalance": {
+      "addr": "0x8c062Dc5D775B7D5efc168F75a875f392f53dCdf",
+      "fj": "1750000000000000000000000",
+      "expected": "1750000"
+    }
+  }
+}
