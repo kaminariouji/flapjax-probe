@@ -46,6 +46,7 @@
     <div class="row">
       <select id="cmd">
         <option value="pool">pool — state, spot, depth ±2% / ±5%</option>
+        <option value="depth">depth — both fee conventions (net vs gross)</option>
         <option value="impact">impact — buy price impact for X BNB</option>
         <option value="balance">balance — balanceOf + supply share</option>
         <option value="verify">verify — decode FLAPJAX Transfers in a tx</option>
@@ -177,19 +178,19 @@ function depthDown(p, scan, ratio) {
   const spT = p.sp0 * Math.sqrt(ratio);
   const tT = (2 * Math.log(spT)) / Math.log(1.0001);
   const bounds = scan.ticks.filter((t) => t <= p.tick && t >= tT).sort((a, b) => b - a);
-  let L = p.L, cur = p.sp0, amt0 = 0;
-  for (const t of bounds) { const spt = sqrtPAt(t); amt0 += L * (1 / spt - 1 / cur); cur = spt; L -= tickNetOf(scan, t); if (L <= 0) break; }
-  if (L > 0) amt0 += L * (1 / spT - 1 / cur);
-  return { amount: amt0 / 10 ** p.dec0 };
+  let L = p.L, cur = p.sp0, amt0 = 0, amt1 = 0, crossed = 0;
+  for (const t of bounds) { const spt = sqrtPAt(t); amt0 += L * (1 / spt - 1 / cur); amt1 += L * (cur - spt); cur = spt; L -= tickNetOf(scan, t); crossed++; if (L <= 0) break; }
+  if (L > 0) { amt0 += L * (1 / spT - 1 / cur); amt1 += L * (cur - spT); }
+  return { amountToken0: amt0 / 10 ** p.dec0, amountToken1: amt1 / 10 ** p.dec1, crossed };
 }
 function depthUp(p, scan, ratio) {
   const spT = p.sp0 * Math.sqrt(ratio);
   const tT = (2 * Math.log(spT)) / Math.log(1.0001);
   const bounds = scan.ticks.filter((t) => t > p.tick && t <= tT).sort((a, b) => a - b);
-  let L = p.L, cur = p.sp0, amt1 = 0;
-  for (const t of bounds) { const spt = sqrtPAt(t); amt1 += L * (spt - cur); cur = spt; L += tickNetOf(scan, t); if (L <= 0) break; }
-  if (L > 0) amt1 += L * (spT - cur);
-  return { amount: amt1 / 10 ** p.dec1 };
+  let L = p.L, cur = p.sp0, amt1 = 0, amt0 = 0, crossed = 0;
+  for (const t of bounds) { const spt = sqrtPAt(t); amt1 += L * (spt - cur); amt0 += L * (1 / cur - 1 / spt); cur = spt; L += tickNetOf(scan, t); crossed++; if (L <= 0) break; }
+  if (L > 0) { amt1 += L * (spT - cur); amt0 += L * (1 / cur - 1 / spT); }
+  return { amountToken1: amt1 / 10 ** p.dec1, amountToken0: amt0 / 10 ** p.dec0, crossed };
 }
 function simBuy(p, scan, amountInHuman) {
   const amountIn = amountInHuman * 10 ** p.dec1;
@@ -239,10 +240,10 @@ async function runPool(out) {
     `liquidity   L = ${p.L.toExponential(6)}  (active, in-range)`,
     `init ticks  ${scan.ticks.length} initialized within +/-${span} of current tick`,
     ``,
-    `depth -2%   ${fmt(Math.round(d2.amount))} ${p.sym0} sold to move price down 2%`,
-    `depth -5%   ${fmt(Math.round(d5.amount))} ${p.sym0} sold to move price down 5%`,
-    `depth +2%   ${u2.amount.toFixed(4)} ${p.sym1} bought to move price up 2%`,
-    `depth +5%   ${u5.amount.toFixed(4)} ${p.sym1} bought to move price up 5%`,
+    `depth -2%   ${fmt(Math.round(d2.amountToken0))} ${p.sym0} sold to move price down 2%`,
+    `depth -5%   ${fmt(Math.round(d5.amountToken0))} ${p.sym0} sold to move price down 5%`,
+    `depth +2%   ${u2.amountToken1.toFixed(4)} ${p.sym1} bought to move price up 2%`,
+    `depth +5%   ${u5.amountToken1.toFixed(4)} ${p.sym1} bought to move price up 5%`,
     ``,
     ...(await (async () => {
       const wide = await initTicksIn(p, p.tick - 12000, p.tick + 12000);
@@ -258,7 +259,40 @@ async function runPool(out) {
       ];
     })()),
     `note        depth is computed by walking initialized ticks from pool state; it is a`,
-    `            static read, not a quote. Fees are not included in the depth figures.`,
+    `            static read, not a quote. Fees are not included in the depth figures`,
+    `            (run 'depth' to see the same numbers with and without the fee).`,
+  ].join('\n'));
+}
+
+async function runDepth(out) {
+  const now = await latestBlock();
+  const block = now - 5;
+  const blk = await rpc('eth_getBlockByNumber', [toHexBlock(block), false]);
+  const ts = new Date(Number(BigInt(blk.timestamp)) * 1000).toISOString();
+  const p = await readPool(block);
+  const span = Math.ceil((2 * Math.log(1.05)) / Math.log(1.0001)) + 256;
+  const scan = await initTicksIn(p, p.tick - span, p.tick + span);
+  const d2 = depthDown(p, scan, 0.98), d5 = depthDown(p, scan, 0.95);
+  const u2 = depthUp(p, scan, 1.02), u5 = depthUp(p, scan, 1.05);
+  const fm = 1 - p.fee / 1e6;
+  const g = (x, dec) => (x / fm).toLocaleString('en-US', { maximumFractionDigits: dec });
+  const n = (x, dec) => x.toLocaleString('en-US', { maximumFractionDigits: dec });
+  out([
+    `FLAPJAX depth — BOTH fee conventions shown — BSC block ${block} (${ts})`,
+    `pool ${POOL}`,
+    `fee ${p.fee / 10000}%  tick ${p.tick}  L ${p.L.toExponential(6)}  spot 1 ${p.sym0} = ${p.spot.toExponential(6)} ${p.sym1}`,
+    ``,
+    `move   in NET (curve absorbs)      in GROSS (trader pays)      out (no fee on output)`,
+    `-2%    ${n(d2.amountToken0, 2).padEnd(26)} ${g(d2.amountToken0, 2).padEnd(26)} ${d2.amountToken1.toFixed(6)} ${p.sym1}`,
+    `-5%    ${n(d5.amountToken0, 2).padEnd(26)} ${g(d5.amountToken0, 2).padEnd(26)} ${d5.amountToken1.toFixed(6)} ${p.sym1}`,
+    `+2%    ${n(u2.amountToken1, 6).padEnd(26)} ${g(u2.amountToken1, 6).padEnd(26)} ${n(u2.amountToken0, 2)} ${p.sym0}`,
+    `+5%    ${n(u5.amountToken1, 6).padEnd(26)} ${g(u5.amountToken1, 6).padEnd(26)} ${n(u5.amountToken0, 2)} ${p.sym0}`,
+    ``,
+    `note   "NET" is the amount the curve itself absorbs (fee excluded); "GROSS" is what a`,
+    `       trader must spend so that NET reaches the curve: gross = net / ${fm.toFixed(2)}.`,
+    `       Two reports that differ by exactly the pool fee are using different conventions,`,
+    `       not disagreeing about the pool. Output side pays no fee, so it matches either way.`,
+    `       ticks crossed: -2% ${d2.crossed}, -5% ${d5.crossed}, +2% ${u2.crossed}, +5% ${u5.crossed} (0 = single constant-L segment)`,
   ].join('\n'));
 }
 
@@ -336,6 +370,7 @@ const $out = document.getElementById('out');
 const $hint = document.getElementById('hint');
 const HINTS = {
   pool: 'pool takes no argument.',
+  depth: 'depth takes no argument — shows net (curve) and gross (trader) depth side by side.',
   impact: 'impact: BNB amount to buy with, e.g. 0.1',
   balance: 'balance: a 0x address (any BSC address).',
   verify: 'verify: a 0x transaction hash containing FLAPJAX transfers.',
@@ -348,6 +383,7 @@ $run.addEventListener('click', async () => {
   try {
     const v = $cmd.value, a = $arg.value.trim();
     if (v === 'pool') await runPool(out);
+    else if (v === 'depth') await runDepth(out);
     else if (v === 'impact') await runImpact(out, a);
     else if (v === 'balance') await runBalance(out, a);
     else if (v === 'verify') await runVerify(out, a);
@@ -357,11 +393,11 @@ $run.addEventListener('click', async () => {
 });
 $arg.addEventListener('keydown', (e) => { if (e.key === 'Enter') $run.click(); });
 
-// deep link: ?run=pool | ?run=impact&arg=0.1 | ?run=balance&arg=0x... | ?run=verify&arg=0x...
+// deep link: ?run=pool | ?run=depth | ?run=impact&arg=0.1 | ?run=balance&arg=0x... | ?run=verify&arg=0x...
 const qs = new URLSearchParams(location.search);
 if (qs.get('run')) {
   const v = qs.get('run');
-  if (['pool', 'impact', 'balance', 'verify'].includes(v)) {
+  if (['pool', 'depth', 'impact', 'balance', 'verify'].includes(v)) {
     $cmd.value = v;
     $hint.textContent = HINTS[v];
     $arg.value = qs.get('arg') || '';
