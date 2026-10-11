@@ -134,16 +134,25 @@ async function readPool(block) {
 }
 
 // --- initialized ticks within [from, to] (tickBitmap + ticks walk) ---
+// tickBitmap is indexed on COMPRESSED ticks (tick / tickSpacing), not raw ticks.
 async function initTicksIn(p, from, to) {
-  const w0 = Math.floor(from / 256)
-  const w1 = Math.floor(to / 256)
+  const spacing = p.tickSpacing
+  const c0 = Math.floor(from / spacing)
+  const c1 = Math.floor(to / spacing)
+  const w0 = Math.floor(c0 / 256)
+  const w1 = Math.floor(c1 / 256)
   const words_ = []
   for (let w = w0; w <= w1; w++) words_.push(w)
   const found = []
   const results = await Promise.all(words_.map((w) => ethCall(POOL, SEL.tickBitmap + encInt(w).slice(2), p.block)))
   results.forEach((ret, i) => {
     const v = words(ret)[0]
-    for (let i2 = 0; i2 < 256; i2++) if ((v >> BigInt(i2)) & 1n) found.push(words_[i] * 256 + i2)
+    for (let b = 0; b < 256; b++) {
+      if ((v >> BigInt(b)) & 1n) {
+        const raw = (words_[i] * 256 + b) * spacing
+        if (raw >= from && raw <= to) found.push(raw)
+      }
+    }
   })
   found.sort((a, b) => a - b)
   const data = {}
@@ -279,6 +288,15 @@ async function cmdPool() {
   console.log(`depth -5%   ${Math.round(d5.amountToken0).toLocaleString('en-US')} ${p.sym0} sold to move price down 5%`)
   console.log(`depth +2%   ${u2.amountToken1.toFixed(4)} ${p.sym1} bought to move price up 2%`)
   console.log(`depth +5%   ${u5.amountToken1.toFixed(4)} ${p.sym1} bought to move price up 5%`)
+  console.log('')
+  const wide = await initTicksIn(p, p.tick - 12000, p.tick + 12000)
+  const above = wide.ticks.filter((t) => t > p.tick)
+  const below = wide.ticks.filter((t) => t <= p.tick)
+  const na = above.length ? Math.min(...above) : null
+  const nb = below.length ? Math.max(...below) : null
+  const pct = (t) => ((Math.pow(1.0001, t - p.tick) - 1) * 100).toFixed(1)
+  console.log(`next ticks  nearest initialized tick above: ${na === null ? 'none within 12k' : na + '  (' + (pct(na) >= 0 ? '+' : '') + pct(na) + '% price)'}`)
+  console.log(`            nearest initialized tick below: ${nb === null ? 'none within 12k' : nb + '  (' + pct(nb) + '% price)'}`)
   console.log('')
   console.log(`note        depth is computed by walking initialized ticks from pool state; it is a`)
   console.log(`            static read, not a quote. Fees are not included in the depth figures.`)
