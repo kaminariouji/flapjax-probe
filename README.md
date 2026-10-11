@@ -10,6 +10,7 @@ Read-only on-chain probe for **FLAPJAX** (BEP-20 on BSC) and its PancakeSwap V3 
 
 ```
 node flapjax-probe.mjs pool                 pool state, spot, depth +/-2% and +/-5% (both sides)
+node flapjax-probe.mjs depth                depth with BOTH fee conventions (net vs gross) — see below
 node flapjax-probe.mjs impact <BNB>         buy price impact for <BNB> in, cross-checked vs QuoterV2
 node flapjax-probe.mjs balance <address>    FLAPJAX balanceOf + supply share at a named block
 node flapjax-probe.mjs verify <txhash>      decode every FLAPJAX Transfer in a tx (payout receipt check)
@@ -39,7 +40,27 @@ next ticks  nearest initialized tick above: -214200  (+20.6% price)
             nearest initialized tick below: none within 12k
 
 note        depth is computed by walking initialized ticks from pool state; it is a
-            static read, not a quote. Fees are not included in the depth figures.
+            static read, not a quote. Fees are not included in the depth figures
+            (run 'depth' to see the same numbers with and without the fee).
+```
+
+```
+$ node flapjax-probe.mjs depth
+FLAPJAX depth — BOTH fee conventions shown — BSC block 126985680 (2026-10-11T08:13:02.000Z)
+pool 0xcA93EC685b8623688E6B236f9068034B298c2150
+fee 1%  tick -216076  L 3.206783e+23  spot 1 FLAPJAX = 4.134725e-10 WBNB
+
+move   in NET (curve absorbs)      in GROSS (trader pays)      out (no fee on output)
+-2%    160,111,004.59             161,728,287.46             0.065536 WBNB
+-5%    409,692,371.06             413,830,677.83             0.165107 WBNB
++2%    0.064884                   0.065539                   155,378,465.32 FLAPJAX
++5%    0.161029                   0.162655                   380,068,613.42 FLAPJAX
+
+note   "NET" is the amount the curve itself absorbs (fee excluded); "GROSS" is what a
+       trader must spend so that NET reaches the curve: gross = net / 0.99.
+       Two reports that differ by exactly the pool fee are using different conventions,
+       not disagreeing about the pool. Output side pays no fee, so it matches either way.
+       ticks crossed: -2% 0, -5% 0, +2% 0, +5% 0 (0 = single constant-L segment)
 ```
 
 ```
@@ -84,6 +105,7 @@ token       0x90c8889f428F9Ebb77BB8f15CAD3a50a9aC680df   log count 1
 ## How it works
 
 - **pool** — reads `slot0()` and `liquidity()`, then walks `tickBitmap` + `ticks()` around the current tick and accumulates the token amounts needed to move the price to ±2% / ±5% (`amount0 = L·(1/√Pa − 1/√Pb)`, `amount1 = L·(√Pb − √Pa)`). Note: `tickBitmap` is indexed on **compressed** ticks (`tick / tickSpacing`, here `/200`) — the scan compresses its bounds before reading words; reading raw-tick words silently misses every position.
+- **depth** — the same walk, printed under both fee conventions: NET (what the curve absorbs, fee excluded) and GROSS (what a trader must spend, `net / (1 − fee)`). This exists because two correct reports can differ by exactly the pool fee — one quoting trader cost, the other quoting curve absorption — and look like a data disagreement. They are the same number, one fee apart. (Worked example: two Q16 reports on this pool, 0.065539 vs 0.064884 WBNB for +2%, ratio exactly 0.99.)
 - **impact** — replays a buy as a tick-walking swap with the pool's fee (`fee = 10000` → 1% deducted before the curve), then cross-checks the result against `QuoterV2.quoteExactInputSingle` **at the same block**. The two agree to the last digit when the walk is correct.
 - **balance** — `balanceOf(address)` and `totalSupply()` via raw `eth_call` at a pinned block.
 - **verify** — fetches the receipt, filters `Transfer` logs emitted by the FLAPJAX token, decodes from/to/value, and flags transfers sent by the treasury.
