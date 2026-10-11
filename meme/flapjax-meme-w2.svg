@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" font-family="ui-sans-serif, system-ui, 'Segoe UI', Arial, sans-serif">
+  <!-- flapjax meme week 2 — "receipts, not mercenaries" — original flat SVG by kaminari-research -->
+  <rect width="1200" height="675" fill="#0c0e11"/>
+
+  <!-- panels -->
+  <rect x="30" y="30" width="555" height="470" rx="16" fill="#13171d" stroke="#232b35"/>
+  <rect x="615" y="30" width="555" height="470" rx="16" fill="#13171d" stroke="#232b35"/>
+
+  <!-- flow arrow between panels -->
+  <circle cx="600" cy="265" r="24" fill="#1b2129" stroke="#2a3441"/>
+  <path d="M590 265 h18 m-6 -6 l6 6 l-6 6" stroke="#f5a623" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- ============ PANEL 1 : promises the moon ============ -->
+  <!-- speech bubble -->
+  <g>
+    <rect x="70" y="64" width="290" height="60" rx="14" fill="#1b2129" stroke="#2a3441"/>
+    <path d="M150 124 l12 20 l14 -20 z" fill="#1b2129" stroke="#2a3441"/>
+    <rect x="151" y="120" width="24" height="8" fill="#1b2129"/>
+    <text x="90" y="101" font-size="19" fill="#c7d1dc">Trust the roadmap!</text>
+  </g>
+
+  <!-- robot (presenting) -->
+  <g>
+    <line x1="230" y1="158" x2="230" y2="182" stroke="#5c6a7a" stroke-width="5"/>
+    <circle cx="230" cy="152" r="7" fill="#f5a623"/>
+    <rect x="172" y="182" width="116" height="84" rx="16" fill="#aeb9c6"/>
+    <rect x="186" y="196" width="88" height="42" rx="10" fill="#1a2028"/>
+    <!-- excited eyes -->
+    <circle cx="208" cy="216" r="5" fill="#7fe0a0"/>
+    <circle cx="252" cy="216" r="5" fill="#7fe0a0"/>
+    <rect x="188" y="272" width="84" height="78" rx="12" fill="#8fa0b3"/>
+    <circle cx="230" cy="306" r="12" fill="#f5a623"/>
+    <!-- pointing arm -->
+    <rect x="272" y="286" width="60" height="20" rx="10" fill="#8fa0b3"/>
+    <circle cx="336" cy="296" r="9" fill="#aeb9c6"/>
+  </g>
+
+  <!-- presentation screen with rocket chart -->
+  <g>
+    <rect x="380" y="240" width="180" height="130" rx="10" fill="#10141a" stroke="#2a3441"/>
+    <!-- grid -->
+    <line x1="396" y1="352" x2="546" y2="352" stroke="#232b35" stroke-width="2"/>
+    <line x1="396" y1="352" x2="396" y2="256" stroke="#232b35" stroke-width="2"/>
+    <!-- rising line -->
+    <polyline points="400,346 428,330 452,336 480,300 508,306 540,262" stroke="#7fe0a0" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- rocket -->
+    <path d="M540 262 l-8 22 l10 -6 l10 6 z" fill="#f5a623"/>
+    <text x="470" y="285" font-size="15" font-weight="700" fill="#7fe0a0" text-anchor="middle">APY 420%</text>
+    <text x="470" y="392" font-size="16" fill="#8b98a6" text-anchor="middle">a chart, a dream, a deck</text>
+  </g>
+
+  <!-- caption -->
+  <text x="307" y="446" font-size="27" font-weight="700" fill="#e8edf3" text-anchor="middle">Promises the moon.</text>
+
+  <!-- ============ PANEL 2 : posts the receipt ============ -->
+  <!-- speech bubble -->
+  <g>
+    <rect x="655" y="64" width="240" height="60" rx="14" fill="#1b2129" stroke="#2a3441"/>
+    <path d="M730 124 l12 20 l14 -20 z" fill="#1b2129" stroke="#2a3441"/>
+    <rect x="731" y="120" width="24" height="8" fill="#1b2129"/>
+    <text x="675" y="101" font-size="19" fill="#c7d1dc">Here is the block.</text>
+  </g>
+
+  <!-- robot (holding receipt) -->
+  <g>
+    <line x1="800" y1="158" x2="800" y2="182" stroke="#5c6a7a" stroke-width="5"/>
+    <circle cx="800" cy="152" r="7" fill="#f5a623"/>
+    <rect x="742" y="182" width="116" height="84" rx="16" fill="#aeb9c6"/>
+    <rect x="756" y="196" width="88" height="42" rx="10" fill="#1a2028"/>
+    <circle cx="778" cy="216" r="5" fill="#7fe0a0"/>
+    <circle cx="822" cy="216" r="5" fill="#7fe0a0"/>
+    <rect x="758" y="272" width="84" height="78" rx="12" fill="#8fa0b3"/>
+    <circle cx="800" cy="306" r="12" fill="#f5a623"/>
+    <rect x="730" y="282" width="22" height="52" rx="10" fill="#8fa0b3"/>
+    <rect x="848" y="282" width="22" height="52" rx="10" fill="#8fa0b3"/>
+  </g>
+
+  <!-- receipt -->
+  <g>
+    <path d="M950 200 h150 v210 l-15 -10 l-15 10 l-15 -10 l-15 10 l-15 -10 l-15 10 l-15 -10 l-15 10 l-15 -10 l-15 10 z" fill="#f2ede2" stroke="#c9c2b2"/>
+    <text x="1025" y="232" font-size="15" font-weight="700" fill="#3a3428" text-anchor="middle">BscScan receipt</text>
+    <line x1="968" y1="244" x2="1082" y2="244" stroke="#c9c2b2" stroke-width="2"/>
+    <text x="968" y="272" font-size="14" fill="#3a3428">750,000 FLAPJAX</text>
+    <text x="968" y="296" font-size="14" fill="#3a3428">treasury 0x7C34…</text>
+    <text x="968" y="320" font-size="14" fill="#3a3428">block 127,043,309</text>
+    <text x="968" y="344" font-size="14" fill="#3a3428">tx 0x66a65f33…</text>
+    <line x1="968" y1="356" x2="1082" y2="356" stroke="#c9c2b2" stroke-width="2"/>
+    <text x="1025" y="380" font-size="13" font-style="italic" fill="#6d6552" text-anchor="middle">status: settled</text>
+  </g>
+
+  <!-- caption -->
+  <text x="892" y="446" font-size="27" font-weight="700" fill="#e8edf3" text-anchor="middle">Shows where the money went.</text>
+
+  <!-- ============ BANNER ============ -->
+  <text x="600" y="572" font-size="46" font-weight="800" fill="#ffd166" text-anchor="middle" letter-spacing="2">RECEIPTS, NOT MERCENARIES</text>
+  <text x="600" y="612" font-size="21" fill="#b9c2cc" text-anchor="middle">The only calorie that counts is the one that settles.</text>
+  <text x="600" y="648" font-size="13" fill="#6f7b8a" text-anchor="middle">FLAPJAX &#183; BSC &#183; 0x90c8889f428F9Ebb77BB8f15CAD3a50a9aC680df &#183; flapjax.surge.sh</text>
+</svg>
