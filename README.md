@@ -41,18 +41,31 @@ note        depth is computed by walking initialized ticks from pool state; it i
 
 ```
 $ node flapjax-probe.mjs impact 0.1
-buy impact — 0.1 BNB in, at BSC block 126977743
+buy impact — 0.1 BNB in, at BSC block 126979681
 walk        235,854,656 FLAPJAX out | ticks crossed 0 | avg exec 4.239899e-10 WBNB/FLAPJAX
 impact      2.544% vs spot (includes 1% pool fee) | price after: 4.261229e-10 WBNB/FLAPJAX
-quoter V2   235,854,656 FLAPJAX out | ticks crossed 0 | delta vs walk: 0.000%
+quoter V2   235,854,656 FLAPJAX out | ticks crossed 0 | delta vs walk: -0.000%
 ```
 
 ```
-$ node flapjax-probe.mjs verify 0x<treasury-payout-tx>
-FLAPJAX payout check — tx 0x...
-block       124616505   status success   from 0x7C34E9e21eE28A49Ff0b84B61774119E6633359f
-transfer    15,000,000 FLAPJAX  0x7c34e9e21ee28a49ff0b84b61774119e6633359f -> 0x6e9c17439cf81247965ff9543645cfc8e746c4588  [from FlapJax treasury]
+$ node flapjax-probe.mjs balance 0x8c062dc5d775b7d5efc168f75a875f392f53dcdf
+FLAPJAX balance read — block 126979678
+address     0x8c062dc5d775b7d5efc168f75a875f392f53dcdf
+balanceOf   750,000 FLAPJAX
+totalSupply 44,444,444,444 FLAPJAX
+share       0.00168750% of supply
+token       0x90c8889f428F9Ebb77BB8f15CAD3a50a9aC680df (BEP-20, BSC)
 ```
+
+```
+$ node flapjax-probe.mjs verify 0x66a65f338a315b91ac424e7d4e66212869d069cc410ae26e7ed54c46d5c597d0
+FLAPJAX payout check — tx 0x66a65f338a315b91ac424e7d4e66212869d069cc410ae26e7ed54c46d5c597d0
+block       126920846   status success   from 0x7c34e9e21ee28a49ff0b84b61774119e6633359f
+transfer    750,000 FLAPJAX  0x7c34e9e21ee28a49ff0b84b61774119e6633359f -> 0x8c062dc5d775b7d5efc168f75a875f392f53dcdf  [from FlapJax treasury]
+token       0x90c8889f428F9Ebb77BB8f15CAD3a50a9aC680df   log count 1
+```
+
+(The `verify` sample is a real treasury payout — the tool was validated against it.)
 
 ## What it reads (BSC mainnet constants)
 
