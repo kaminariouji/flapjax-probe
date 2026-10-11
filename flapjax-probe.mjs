@@ -412,6 +412,81 @@ async function cmdVerify(args) {
   console.log(`token       ${FLAPJAX}   log count ${rc.logs.length}`)
 }
 
+// --- FlapJax Agent/Wallet Checker (x402) — integration ---
+// GET /check returns HTTP 402 with a PAYMENT-REQUIRED header (base64 x402 v2 challenge).
+// This command handles that challenge correctly and never spends: it decodes the terms
+// and stops. A paid 200 response (if you ever send one yourself) is summarized too.
+const CHECKER = 'https://flapjax-check.run402.com'
+
+function decodePaymentRequired(res) {
+  const raw = res.headers.get('payment-required')
+  if (!raw) return null
+  try {
+    return JSON.parse(Buffer.from(raw, 'base64').toString('utf8'))
+  } catch {
+    return null
+  }
+}
+
+const fmtUsdc = (micros) => {
+  const n = Number(micros) / 1e6
+  return Number.isFinite(n) ? `${n} USDC` : String(micros)
+}
+
+async function cmdCheck(args) {
+  const addr = args.find((a) => !a.startsWith('--'))
+  const asJson = args.includes('--json')
+  if (!/^0x[0-9a-fA-F]{40}$/.test(addr || '')) throw new Error('usage: check <0x address> [--json]')
+  const url = `${CHECKER}/check?address=${addr}`
+  const res = await fetch(url, { headers: { accept: 'application/json' } })
+  const bodyText = await res.text()
+  let body
+  try {
+    body = JSON.parse(bodyText)
+  } catch {
+    body = bodyText.slice(0, 400)
+  }
+  const challenge = decodePaymentRequired(res)
+
+  if (asJson) {
+    console.log(JSON.stringify({ httpStatus: res.status, url, challenge, body }, null, 2))
+    return
+  }
+
+  console.log('FlapJax Agent/Wallet Checker — x402 integration (read-only, no payment sent)')
+  console.log(`call        GET ${url}`)
+  console.log(`http        ${res.status}${res.status === 402 ? '  (payment required — the expected free response)' : ''}`)
+
+  if (res.status === 402 && challenge) {
+    const r = challenge.resource || {}
+    const acc = (challenge.accepts || [])[0] || {}
+    console.log(`service     ${r.serviceName || '-'}  (x402Version ${challenge.x402Version})`)
+    console.log(`about       ${r.description || '-'}`)
+    console.log(`tags        ${(r.tags || []).join(', ')}`)
+    console.log('')
+    console.log(`payment     scheme ${acc.scheme}  network ${acc.network}  (eip155:8453 = Base mainnet)`)
+    console.log(`price       ${fmtUsdc(acc.amount)}  asset ${acc.asset} (${acc.extra?.name || '?'})`)
+    console.log(`payTo       ${acc.payTo}`)
+    console.log(`timeout     ${acc.maxTimeoutSeconds}s  route ${acc.extra?.run402_payment_kind || '-'}`)
+    const ex = challenge.extensions?.bazaar?.info?.output?.example
+    if (ex) console.log(`would return ${JSON.stringify(ex)}`)
+    console.log('')
+    const why = body?.next_actions?.[0]?.why
+    console.log(`gateway     ${body?.code || '-'}${body?.retryable === false ? '  retryable:false' : ''}${why ? ' — ' + why : ''}`)
+    console.log('')
+    console.log('note        this probe never spends: it decodes the challenge and stops. Free calls')
+    console.log('            that need no payment: /related-sample?chain=bsc|base, /fj/balance?wallet=0x...')
+  } else if (res.status === 200 && body) {
+    console.log(`result      address ${body.address || addr}`)
+    if (body.agent_likeness) console.log(`agent score ${body.agent_likeness.score}`)
+    if (body.sybil) console.log(`sybil       cluster_flag ${body.sybil.cluster_flag}`)
+    if (body.flapjax) console.log(`flapjax     holds ${body.flapjax.holds}`)
+    console.log(`raw         ${JSON.stringify(body).slice(0, 300)}`)
+  } else {
+    console.log(`body        ${JSON.stringify(body).slice(0, 300)}`)
+  }
+}
+
 // --- entry ---
 const [cmd, ...args] = process.argv.slice(2)
 const usage = `flapjax-probe — read-only FLAPJAX on-chain probe (BSC)
@@ -421,6 +496,8 @@ const usage = `flapjax-probe — read-only FLAPJAX on-chain probe (BSC)
   node flapjax-probe.mjs impact <BNB>         buy impact, cross-checked vs QuoterV2
   node flapjax-probe.mjs balance <address>    balanceOf + supply share at a named block
   node flapjax-probe.mjs verify <txhash>      decode FLAPJAX Transfers in a tx
+  node flapjax-probe.mjs check <address>      FlapJax Agent/Wallet Checker (x402): handle the
+                                              free 402 challenge, print the terms. Never pays.
 
 No keys. No signing. Reads public BSC RPCs only.`
 
@@ -430,6 +507,7 @@ try {
   else if (cmd === 'impact') await cmdImpact(args)
   else if (cmd === 'balance') await cmdBalance(args)
   else if (cmd === 'verify') await cmdVerify(args)
+  else if (cmd === 'check') await cmdCheck(args)
   else console.log(usage)
 } catch (e) {
   console.error('error:', e.message)
