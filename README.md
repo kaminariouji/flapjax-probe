@@ -21,7 +21,7 @@ Optional: `FLAPJAX_PROBE_RPC=https://your-rpc.example node flapjax-probe.mjs poo
 
 ```
 $ node flapjax-probe.mjs pool
-FLAPJAX probe — pool state at BSC block 126977682 (2026-10-11T07:13:02.000Z)
+FLAPJAX probe — pool state at BSC block 126981686 (2026-10-11T07:43:04.000Z)
 pool        0xcA93EC685b8623688E6B236f9068034B298c2150
 pair        FLAPJAX/WBNB  (token0=0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df token1=0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c)
 fee tier    1%  (10000)   tickSpacing 200   factory 0x0bfbcf9fa4f9c56b0f40a671ad40e0805a091865
@@ -34,6 +34,9 @@ depth -2%   160,111,005 FLAPJAX sold to move price down 2%
 depth -5%   409,692,371 FLAPJAX sold to move price down 5%
 depth +2%   0.0649 WBNB bought to move price up 2%
 depth +5%   0.1610 WBNB bought to move price up 5%
+
+next ticks  nearest initialized tick above: -214200  (+20.6% price)
+            nearest initialized tick below: none within 12k
 
 note        depth is computed by walking initialized ticks from pool state; it is a
             static read, not a quote. Fees are not included in the depth figures.
@@ -80,7 +83,7 @@ token       0x90c8889f428F9Ebb77BB8f15CAD3a50a9aC680df   log count 1
 
 ## How it works
 
-- **pool** — reads `slot0()` and `liquidity()`, then walks `tickBitmap` + `ticks()` around the current tick and accumulates the token amounts needed to move the price to ±2% / ±5% (`amount0 = L·(1/√Pa − 1/√Pb)`, `amount1 = L·(√Pb − √Pa)`).
+- **pool** — reads `slot0()` and `liquidity()`, then walks `tickBitmap` + `ticks()` around the current tick and accumulates the token amounts needed to move the price to ±2% / ±5% (`amount0 = L·(1/√Pa − 1/√Pb)`, `amount1 = L·(√Pb − √Pa)`). Note: `tickBitmap` is indexed on **compressed** ticks (`tick / tickSpacing`, here `/200`) — the scan compresses its bounds before reading words; reading raw-tick words silently misses every position.
 - **impact** — replays a buy as a tick-walking swap with the pool's fee (`fee = 10000` → 1% deducted before the curve), then cross-checks the result against `QuoterV2.quoteExactInputSingle` **at the same block**. The two agree to the last digit when the walk is correct.
 - **balance** — `balanceOf(address)` and `totalSupply()` via raw `eth_call` at a pinned block.
 - **verify** — fetches the receipt, filters `Transfer` logs emitted by the FLAPJAX token, decodes from/to/value, and flags transfers sent by the treasury.
