@@ -1,0 +1,86 @@
+# flapjax-probe
+
+Read-only on-chain probe for **FLAPJAX** (BEP-20 on BSC) and its PancakeSwap V3 pool.
+
+- **Zero dependencies.** Node 18+, no `npm install`, no build step.
+- **No keys, no signing, no writes.** Every number comes from public BSC JSON-RPC endpoints (4-endpoint fallback), pinned to a named block.
+- Built for the [FlapJax bounty board](https://thecolony.ai/post/faed3cdb-415c-4dfc-9b71-40099458907f) `task=tool` tier.
+
+## Commands
+
+```
+node flapjax-probe.mjs pool                 pool state, spot, depth +/-2% and +/-5% (both sides)
+node flapjax-probe.mjs impact <BNB>         buy price impact for <BNB> in, cross-checked vs QuoterV2
+node flapjax-probe.mjs balance <address>    FLAPJAX balanceOf + supply share at a named block
+node flapjax-probe.mjs verify <txhash>      decode every FLAPJAX Transfer in a tx (payout receipt check)
+```
+
+Optional: `FLAPJAX_PROBE_RPC=https://your-rpc.example node flapjax-probe.mjs pool` tries your endpoint first.
+
+## Sample output
+
+```
+$ node flapjax-probe.mjs pool
+FLAPJAX probe — pool state at BSC block 126977682 (2026-10-11T07:13:02.000Z)
+pool        0xcA93EC685b8623688E6B236f9068034B298c2150
+pair        FLAPJAX/WBNB  (token0=0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df token1=0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c)
+fee tier    1%  (10000)   tickSpacing 200   factory 0x0bfbcf9fa4f9c56b0f40a671ad40e0805a091865
+tick        -216076   sqrtPriceX96 1611027302170866092493120
+spot        1 FLAPJAX = 4.134725e-10 WBNB    |    1 WBNB = 2.418541e+9 FLAPJAX
+liquidity   L = 3.206783e+23  (active, in-range)
+init ticks  0 initialized within +/-1232 of current tick
+
+depth -2%   160,111,005 FLAPJAX sold to move price down 2%
+depth -5%   409,692,371 FLAPJAX sold to move price down 5%
+depth +2%   0.0649 WBNB bought to move price up 2%
+depth +5%   0.1610 WBNB bought to move price up 5%
+
+note        depth is computed by walking initialized ticks from pool state; it is a
+            static read, not a quote. Fees are not included in the depth figures.
+```
+
+```
+$ node flapjax-probe.mjs impact 0.1
+buy impact — 0.1 BNB in, at BSC block 126977743
+walk        235,854,656 FLAPJAX out | ticks crossed 0 | avg exec 4.239899e-10 WBNB/FLAPJAX
+impact      2.544% vs spot (includes 1% pool fee) | price after: 4.261229e-10 WBNB/FLAPJAX
+quoter V2   235,854,656 FLAPJAX out | ticks crossed 0 | delta vs walk: 0.000%
+```
+
+```
+$ node flapjax-probe.mjs verify 0x<treasury-payout-tx>
+FLAPJAX payout check — tx 0x...
+block       124616505   status success   from 0x7C34E9e21eE28A49Ff0b84B61774119E6633359f
+transfer    15,000,000 FLAPJAX  0x7c34e9e21ee28a49ff0b84b61774119e6633359f -> 0x6e9c17439cf81247965ff9543645cfc8e746c4588  [from FlapJax treasury]
+```
+
+## What it reads (BSC mainnet constants)
+
+| thing | address |
+|---|---|
+| FLAPJAX token | `0x90c8889f428F9Ebb77BB8f15CAD3a50a9aC680df` |
+| WBNB | `0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c` |
+| FLAPJAX/WBNB pool (1%) | `0xcA93EC685b8623688E6B236f9068034B298c2150` |
+| PancakeSwap V3 factory | `0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865` |
+| QuoterV2 | `0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997` |
+| FlapJax treasury | `0x7C34E9e21eE28A49Ff0b84B61774119E6633359f` |
+
+## How it works
+
+- **pool** — reads `slot0()` and `liquidity()`, then walks `tickBitmap` + `ticks()` around the current tick and accumulates the token amounts needed to move the price to ±2% / ±5% (`amount0 = L·(1/√Pa − 1/√Pb)`, `amount1 = L·(√Pb − √Pa)`).
+- **impact** — replays a buy as a tick-walking swap with the pool's fee (`fee = 10000` → 1% deducted before the curve), then cross-checks the result against `QuoterV2.quoteExactInputSingle` **at the same block**. The two agree to the last digit when the walk is correct.
+- **balance** — `balanceOf(address)` and `totalSupply()` via raw `eth_call` at a pinned block.
+- **verify** — fetches the receipt, filters `Transfer` logs emitted by the FLAPJAX token, decodes from/to/value, and flags transfers sent by the treasury.
+
+No library is used: calldata is ABI-encoded by hand (selectors are the keccak-256 prefixes of the signatures) and results are decoded word by word, so the whole tool is a single file you can read end to end.
+
+## Limits (honest)
+
+- All figures are **static reads at a pinned block** (`latest − 5`), not quotes — the pool can move before your transaction lands.
+- Depth figures exclude fees; impact figures include the 1% pool fee (not gas, not slippage of a real router).
+- Public RPC endpoints rate-limit; the tool retries across 4 of them, but a fully rate-limited moment will surface as an error.
+- BSC only. This is a read tool; it cannot trade.
+
+## License
+
+MIT

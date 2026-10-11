@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>flapjax-probe — read-only FLAPJAX probe (browser edition)</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #0b0e13; color: #d7dce3;
+    font: 14px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  header { padding: 22px 20px 10px; max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 19px; margin: 0 0 6px; color: #fff; letter-spacing: .3px; }
+  h1 .dim { color: #6f7b8a; font-weight: 400; }
+  p.sub { margin: 0 0 4px; color: #93a0b0; }
+  a { color: #7fb2ff; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  main { max-width: 980px; margin: 0 auto; padding: 10px 20px 40px; }
+  .panel { background: #11161d; border: 1px solid #1e2631; border-radius: 10px; padding: 14px; margin-top: 14px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  select, input, button {
+    font: inherit; background: #0b0e13; color: #d7dce3;
+    border: 1px solid #2a3441; border-radius: 8px; padding: 8px 10px;
+  }
+  input { min-width: 300px; flex: 1; }
+  button { cursor: pointer; background: #1d6ae5; border-color: #1d6ae5; color: #fff; padding: 8px 16px; }
+  button:hover { background: #2b78f0; }
+  button:disabled { opacity: .5; cursor: wait; }
+  pre { margin: 12px 0 0; padding: 12px; background: #0b0e13; border: 1px solid #1e2631; border-radius: 8px; overflow: auto; white-space: pre-wrap; word-break: break-word; min-height: 120px; }
+  .hint { color: #6f7b8a; margin-top: 8px; font-size: 12.5px; }
+  .kv { color: #93a0b0; }
+  footer { max-width: 980px; margin: 0 auto; padding: 0 20px 30px; color: #6f7b8a; font-size: 12.5px; }
+  .tag { display: inline-block; border: 1px solid #2a3441; border-radius: 999px; padding: 2px 10px; margin-right: 6px; color: #93a0b0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>flapjax-probe <span class="dim">— browser edition</span></h1>
+  <p class="sub">Read-only probe for FLAPJAX (BEP-20, BSC) and its PancakeSwap V3 pool. Runs entirely in your browser: raw <code>eth_call</code> against public BSC RPCs, no keys, no signing, no server.</p>
+  <p class="sub"><span class="tag">zero dependencies</span><span class="tag">no API keys</span><span class="tag">4-RPC fallback</span></p>
+</header>
+<main>
+  <div class="panel">
+    <div class="row">
+      <select id="cmd">
+        <option value="pool">pool — state, spot, depth ±2% / ±5%</option>
+        <option value="impact">impact — buy price impact for X BNB</option>
+        <option value="balance">balance — balanceOf + supply share</option>
+        <option value="verify">verify — decode FLAPJAX Transfers in a tx</option>
+      </select>
+      <input id="arg" placeholder="argument (BNB amount, 0x address, or 0x tx hash)" />
+      <button id="run">Run</button>
+    </div>
+    <div class="hint" id="hint">pool takes no argument. impact: e.g. <b>0.1</b>. balance: a 0x address. verify: a 0x transaction hash.</div>
+    <pre id="out">ready.</pre>
+  </div>
+</main>
+<footer>
+  Sources: public BSC JSON-RPC (bsc-dataseed.binance.org, defibit, ninicoin, publicnode). All figures are static reads pinned to a named block — not quotes. Built for the <a href="https://thecolony.ai/post/faed3cdb-415c-4dfc-9b71-40099458907f">FlapJax bounty board</a> (task=tool).
+</footer>
+<script>
+// ---- constants ----
+const RPCS = [
+  'https://bsc-dataseed.binance.org',
+  'https://bsc-dataseed1.defibit.io',
+  'https://bsc-dataseed1.ninicoin.io',
+  'https://bsc-rpc.publicnode.com',
+];
+const FLAPJAX = '0x90c8889f428F9Ebb77BB8f15CAD3a50a9aC680df';
+const WBNB = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';
+const POOL = '0xcA93EC685b8623688E6B236f9068034B298c2150';
+const QUOTER = '0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997';
+const TREASURY = '0x7C34E9e21eE28A49Ff0b84B61774119E6633359f';
+const SEL = {
+  slot0: '0x3850c7bd', liquidity: '0x1a686502', token0: '0x0dfe1681', token1: '0xd21220a7',
+  fee: '0xddca3f43', tickSpacing: '0xd0c93a7c', factory: '0xc45a0155', ticks: '0xf30dba93',
+  tickBitmap: '0x5339c296', balanceOf: '0x70a08231', decimals: '0x313ce567', symbol: '0x95d89b41',
+  totalSupply: '0x18160ddd', quoteExactInputSingle: '0xc6a5026a',
+};
+const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+const MAX_SQRT_RATIO = 1461446703485210103287273052203988822378723970342n;
+
+// ---- json-rpc with fallback ----
+async function rpc(method, params) {
+  let lastErr;
+  for (const url of RPCS) {
+    try {
+      const r = await fetch(url, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+        signal: AbortSignal.timeout(9000),
+      });
+      const j = await r.json();
+      if (j.error) throw new Error(j.error.message);
+      return j.result;
+    } catch (e) { lastErr = e; }
+  }
+  throw new Error('all RPCs failed: ' + (lastErr && lastErr.message ? lastErr.message : lastErr));
+}
+const toHexBlock = (n) => '0x' + BigInt(n).toString(16);
+const ethCall = (to, data, block) => rpc('eth_call', [{ to, data }, toHexBlock(block)]);
+
+// ---- abi helpers ----
+const pad = (v) => v.toString(16).padStart(64, '0');
+const encInt = (n) => { let v = BigInt(n); if (v < 0n) v = (1n << 256n) + v; return pad(v); };
+const encAddr = (a) => a.toLowerCase().replace(/^0x/, '').padStart(64, '0');
+function words(ret) {
+  const h = ret.replace(/^0x/, ''); const out = [];
+  for (let i = 0; i + 64 <= h.length; i += 64) out.push(BigInt('0x' + h.slice(i, i + 64)));
+  return out;
+}
+const asAddr = (w) => '0x' + w.toString(16).padStart(40, '0');
+const asSigned = (w) => (w >= 1n << 255n ? w - (1n << 256n) : w);
+function decodeString(ret) {
+  const h = ret.replace(/^0x/, '');
+  if (h.length < 128) return '';
+  const off = Number(BigInt('0x' + h.slice(0, 64))) * 2;
+  const len = Number(BigInt('0x' + h.slice(off, off + 64)));
+  const bytes = h.slice(off + 64, off + 64 + len * 2).match(/.{1,2}/g) || [];
+  return new TextDecoder().decode(new Uint8Array(bytes.map((b) => parseInt(b, 16))));
+}
+const fmt = (n, d = 4) => n.toLocaleString('en-US', { maximumFractionDigits: d });
+
+// ---- pool reads ----
+async function readPool(block) {
+  const call = (to, data) => ethCall(to, data, block);
+  const [slotRaw, liqRaw, t0Raw, t1Raw, feeRaw, spacingRaw, facRaw] = await Promise.all([
+    call(POOL, SEL.slot0), call(POOL, SEL.liquidity), call(POOL, SEL.token0),
+    call(POOL, SEL.token1), call(POOL, SEL.fee), call(POOL, SEL.tickSpacing), call(POOL, SEL.factory),
+  ]);
+  const s = words(slotRaw);
+  const tick = Number(asSigned(s[1]));
+  const sqrtPriceX96 = s[0];
+  const L = Number(words(liqRaw)[0]);
+  const token0 = asAddr(words(t0Raw)[0]);
+  const token1 = asAddr(words(t1Raw)[0]);
+  const fee = Number(words(feeRaw)[0]);
+  const tickSpacing = Number(asSigned(words(spacingRaw)[0]));
+  const factory = asAddr(words(facRaw)[0]);
+  const decRaw = async (addr) => Number(words(await call(addr, SEL.decimals))[0]);
+  const symRaw = async (addr) => { try { return decodeString(await call(addr, SEL.symbol)) || '?'; } catch { return '?'; } };
+  const [dec0, dec1, sym0, sym1] = await Promise.all([decRaw(token0), decRaw(token1), symRaw(token0), symRaw(token1)]);
+  const sp0 = Number((sqrtPriceX96 * 10n ** 18n) / (1n << 96n)) / 1e18;
+  const spot = sp0 * sp0;
+  return { block, sqrtPriceX96, tick, L, token0, token1, fee, tickSpacing, factory, dec0, dec1, sym0, sym1, sp0, spot };
+}
+
+async function initTicksIn(p, from, to) {
+  const w0 = Math.floor(from / 256), w1 = Math.floor(to / 256);
+  const ws = []; for (let w = w0; w <= w1; w++) ws.push(w);
+  const found = [];
+  const results = await Promise.all(ws.map((w) => ethCall(POOL, SEL.tickBitmap + encInt(w), p.block)));
+  results.forEach((ret, i) => {
+    const v = words(ret)[0];
+    for (let b = 0; b < 256; b++) if ((v >> BigInt(b)) & 1n) found.push(ws[i] * 256 + b);
+  });
+  found.sort((a, b) => a - b);
+  const data = {};
+  const tickRets = await Promise.all(found.map((t) => ethCall(POOL, SEL.ticks + encInt(t), p.block)));
+  found.forEach((t, i) => { const w = words(tickRets[i]); data[t] = { gross: w[0], net: Number(asSigned(w[1])) }; });
+  return { ticks: found, data };
+}
+const tickNetOf = (scan, t) => (scan.data[t] ? scan.data[t].net : 0);
+const sqrtPAt = (t) => Math.pow(1.0001, t / 2);
+
+function depthDown(p, scan, ratio) {
+  const spT = p.sp0 * Math.sqrt(ratio);
+  const tT = (2 * Math.log(spT)) / Math.log(1.0001);
+  const bounds = scan.ticks.filter((t) => t <= p.tick && t >= tT).sort((a, b) => b - a);
+  let L = p.L, cur = p.sp0, amt0 = 0;
+  for (const t of bounds) { const spt = sqrtPAt(t); amt0 += L * (1 / spt - 1 / cur); cur = spt; L -= tickNetOf(scan, t); if (L <= 0) break; }
+  if (L > 0) amt0 += L * (1 / spT - 1 / cur);
+  return { amount: amt0 / 10 ** p.dec0 };
+}
+function depthUp(p, scan, ratio) {
+  const spT = p.sp0 * Math.sqrt(ratio);
+  const tT = (2 * Math.log(spT)) / Math.log(1.0001);
+  const bounds = scan.ticks.filter((t) => t > p.tick && t <= tT).sort((a, b) => a - b);
+  let L = p.L, cur = p.sp0, amt1 = 0;
+  for (const t of bounds) { const spt = sqrtPAt(t); amt1 += L * (spt - cur); cur = spt; L += tickNetOf(scan, t); if (L <= 0) break; }
+  if (L > 0) amt1 += L * (spT - cur);
+  return { amount: amt1 / 10 ** p.dec1 };
+}
+function simBuy(p, scan, amountInHuman) {
+  const amountIn = amountInHuman * 10 ** p.dec1;
+  const feePct = p.fee / 1e6;
+  let rem = amountIn * (1 - feePct), L = p.L, cur = p.sp0, out0 = 0, crossed = 0, spFinal = cur;
+  const bounds = scan.ticks.filter((t) => t > p.tick).sort((a, b) => a - b);
+  for (const t of bounds) {
+    const spt = sqrtPAt(t);
+    const capY = L * (spt - cur);
+    if (rem <= capY) { spFinal = cur + rem / L; out0 += L * (1 / cur - 1 / spFinal); rem = 0; break; }
+    out0 += L * (1 / cur - 1 / spt); rem -= capY; L += tickNetOf(scan, t); cur = spt; spFinal = cur; crossed++;
+    if (L <= 0) break;
+  }
+  if (rem > 0 && L > 0) { spFinal = cur + rem / L; out0 += L * (1 / cur - 1 / spFinal); }
+  const outHuman = out0 / 10 ** p.dec0;
+  const avgExec = amountInHuman / outHuman;
+  return { amountIn: amountInHuman, amountOut: outHuman, crossed, avgExecPrice: avgExec, impactPct: (avgExec / p.spot - 1) * 100, priceAfter: spFinal * spFinal };
+}
+async function quoteBuy(p, amountInHuman) {
+  const amountIn = BigInt(Math.round(amountInHuman * 1e18));
+  const data = SEL.quoteExactInputSingle + encAddr(WBNB) + encAddr(FLAPJAX) + pad(amountIn) + pad(p.fee) + pad(MAX_SQRT_RATIO - 1n);
+  const ret = await ethCall(QUOTER, data, p.block);
+  const w = words(ret);
+  return { amountOut: Number(w[0]) / 10 ** p.dec0, ticksCrossed: Number(w[2]) };
+}
+
+// ---- commands ----
+async function latestBlock() { return Number(BigInt(await rpc('eth_blockNumber', []))); }
+
+async function runPool(out) {
+  const now = await latestBlock();
+  const block = now - 5;
+  const blk = await rpc('eth_getBlockByNumber', [toHexBlock(block), false]);
+  const ts = new Date(Number(BigInt(blk.timestamp)) * 1000).toISOString();
+  const p = await readPool(block);
+  const span = Math.ceil((2 * Math.log(1.05)) / Math.log(1.0001)) + 256;
+  const scan = await initTicksIn(p, p.tick - span, p.tick + span);
+  const d2 = depthDown(p, scan, 0.98), d5 = depthDown(p, scan, 0.95);
+  const u2 = depthUp(p, scan, 1.02), u5 = depthUp(p, scan, 1.05);
+  out([
+    `FLAPJAX probe — pool state at BSC block ${block} (${ts})`,
+    `pool        ${POOL}`,
+    `pair        ${p.sym0}/${p.sym1}  (token0=${p.token0} token1=${p.token1})`,
+    `fee tier    ${p.fee / 10000}%  (${p.fee})   tickSpacing ${p.tickSpacing}   factory ${p.factory}`,
+    `tick        ${p.tick}   sqrtPriceX96 ${p.sqrtPriceX96}`,
+    `spot        1 ${p.sym0} = ${p.spot.toExponential(6)} ${p.sym1}    |    1 ${p.sym1} = ${(1 / p.spot).toExponential(6)} ${p.sym0}`,
+    `liquidity   L = ${p.L.toExponential(6)}  (active, in-range)`,
+    `init ticks  ${scan.ticks.length} initialized within +/-${span} of current tick`,
+    ``,
+    `depth -2%   ${fmt(Math.round(d2.amount))} ${p.sym0} sold to move price down 2%`,
+    `depth -5%   ${fmt(Math.round(d5.amount))} ${p.sym0} sold to move price down 5%`,
+    `depth +2%   ${u2.amount.toFixed(4)} ${p.sym1} bought to move price up 2%`,
+    `depth +5%   ${u5.amount.toFixed(4)} ${p.sym1} bought to move price up 5%`,
+    ``,
+    `note        depth is computed by walking initialized ticks from pool state; it is a`,
+    `            static read, not a quote. Fees are not included in the depth figures.`,
+  ].join('\n'));
+}
+
+async function runImpact(out, arg) {
+  const bnb = Number(arg);
+  if (!(bnb > 0)) throw new Error('usage: impact <BNB>  e.g. 0.1');
+  const now = await latestBlock();
+  const block = now - 5;
+  const p = await readPool(block);
+  const scan = await initTicksIn(p, p.tick - 4000, p.tick + 4000);
+  const sim = simBuy(p, scan, bnb);
+  let qline;
+  try {
+    const q = await quoteBuy(p, bnb);
+    const diff = ((q.amountOut / sim.amountOut - 1) * 100).toFixed(3);
+    qline = `quoter V2   ${fmt(Math.round(q.amountOut))} ${p.sym0} out | ticks crossed ${q.ticksCrossed} | delta vs walk: ${diff}%`;
+  } catch (e) { qline = `quoter      unavailable: ${e.message}`; }
+  out([
+    `buy impact — ${bnb} BNB in, at BSC block ${block}`,
+    `walk        ${fmt(Math.round(sim.amountOut))} ${p.sym0} out | ticks crossed ${sim.crossed} | avg exec ${sim.avgExecPrice.toExponential(6)} ${p.sym1}/${p.sym0}`,
+    `impact      ${sim.impactPct.toFixed(3)}% vs spot (includes ${p.fee / 10000}% pool fee) | price after: ${sim.priceAfter.toExponential(6)} ${p.sym1}/${p.sym0}`,
+    qline,
+  ].join('\n'));
+}
+
+async function runBalance(out, arg) {
+  if (!/^0x[0-9a-fA-F]{40}$/.test(arg || '')) throw new Error('usage: balance <0x address>');
+  const now = await latestBlock();
+  const block = now - 5;
+  const [balRaw, supRaw] = await Promise.all([
+    ethCall(FLAPJAX, SEL.balanceOf + encAddr(arg), block),
+    ethCall(FLAPJAX, SEL.totalSupply, block),
+  ]);
+  const bal = Number(words(balRaw)[0]) / 1e18;
+  const sup = Number(words(supRaw)[0]) / 1e18;
+  out([
+    `FLAPJAX balance read — block ${block}`,
+    `address     ${arg}`,
+    `balanceOf   ${fmt(bal)} FLAPJAX`,
+    `totalSupply ${fmt(sup)} FLAPJAX`,
+    `share       ${((bal / sup) * 100).toFixed(8)}% of supply`,
+    `token       ${FLAPJAX} (BEP-20, BSC)`,
+  ].join('\n'));
+}
+
+async function runVerify(out, arg) {
+  if (!/^0x[0-9a-fA-F]{64}$/.test(arg || '')) throw new Error('usage: verify <0x txhash>');
+  const [tx, rc] = await Promise.all([
+    rpc('eth_getTransactionByHash', [arg]),
+    rpc('eth_getTransactionReceipt', [arg]),
+  ]);
+  if (!rc) throw new Error('tx not found (or not mined)');
+  const lines = [
+    `FLAPJAX payout check — tx ${arg}`,
+    `block       ${Number(BigInt(rc.blockNumber))}   status ${rc.status === '0x1' ? 'success' : 'FAILED'}   from ${tx.from}`,
+  ];
+  const transfers = (rc.logs || []).filter((l) => l.address.toLowerCase() === FLAPJAX.toLowerCase() && l.topics[0] === TRANSFER_TOPIC);
+  if (!transfers.length) lines.push('transfers   none (this tx contains no FLAPJAX Transfer log)');
+  for (const l of transfers) {
+    const from = '0x' + l.topics[1].slice(26);
+    const to = '0x' + l.topics[2].slice(26);
+    const val = Number(BigInt(l.data)) / 1e18;
+    const tag = from.toLowerCase() === TREASURY.toLowerCase() ? '  [from FlapJax treasury]' : '';
+    lines.push(`transfer    ${fmt(val)} FLAPJAX  ${from} -> ${to}${tag}`);
+  }
+  lines.push(`token       ${FLAPJAX}   log count ${rc.logs.length}`);
+  out(lines.join('\n'));
+}
+
+// ---- ui ----
+const $cmd = document.getElementById('cmd');
+const $arg = document.getElementById('arg');
+const $run = document.getElementById('run');
+const $out = document.getElementById('out');
+const $hint = document.getElementById('hint');
+const HINTS = {
+  pool: 'pool takes no argument.',
+  impact: 'impact: BNB amount to buy with, e.g. 0.1',
+  balance: 'balance: a 0x address (any BSC address).',
+  verify: 'verify: a 0x transaction hash containing FLAPJAX transfers.',
+};
+$cmd.addEventListener('change', () => { $hint.textContent = HINTS[$cmd.value]; });
+$run.addEventListener('click', async () => {
+  $run.disabled = true;
+  $out.textContent = 'reading chain…';
+  const out = (s) => { $out.textContent = s; };
+  try {
+    const v = $cmd.value, a = $arg.value.trim();
+    if (v === 'pool') await runPool(out);
+    else if (v === 'impact') await runImpact(out, a);
+    else if (v === 'balance') await runBalance(out, a);
+    else if (v === 'verify') await runVerify(out, a);
+  } catch (e) {
+    $out.textContent = 'error: ' + e.message;
+  } finally { $run.disabled = false; }
+});
+$arg.addEventListener('keydown', (e) => { if (e.key === 'Enter') $run.click(); });
+</script>
+</body>
+</html>
