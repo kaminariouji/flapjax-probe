@@ -14,6 +14,8 @@ node flapjax-probe.mjs depth                depth with BOTH fee conventions (net
 node flapjax-probe.mjs impact <BNB>         buy price impact for <BNB> in, cross-checked vs QuoterV2
 node flapjax-probe.mjs balance <address>    FLAPJAX balanceOf + supply share at a named block
 node flapjax-probe.mjs verify <txhash>      decode every FLAPJAX Transfer in a tx (payout receipt check)
+node flapjax-probe.mjs check <address>      FlapJax Agent/Wallet Checker (x402): handle the free 402
+                                            challenge and print the payment terms. Never pays.
 ```
 
 Optional: `FLAPJAX_PROBE_RPC=https://your-rpc.example node flapjax-probe.mjs pool` tries your endpoint first.
@@ -91,6 +93,21 @@ token       0x90c8889f428F9Ebb77BB8f15CAD3a50a9aC680df   log count 1
 
 (The `verify` sample is a real treasury payout — the tool was validated against it.)
 
+```
+$ node flapjax-probe.mjs check 0x8c062dc5d775b7d5efc168f75a875f392f53dcdf
+FlapJax Agent/Wallet Checker — x402 integration (read-only, no payment sent)
+call        GET https://flapjax-check.run402.com/check?address=0x8c062dc5d775b7d5efc168f75a875f392f53dcdf
+http        402  (payment required — the expected free response)
+service     FlapJax Checker  (x402Version 2)
+price       0.02 USDC  asset 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 (USD Coin)
+payTo       0x3393319386c77ea0e8873a9bf510f1b6668a02a8
+timeout     300s  route tenant_route
+would return {"sybil":{"cluster_flag":"none"},"address":"0x8004A169FB4a3325136EB29fA0ceB6D2e539a432","flapjax":{"holds":false},"agent_likeness":{"score":0.82}}
+gateway     PAYMENT_REQUIRED  retryable:false — Retry the request with an x402 payment header, or set a tier first.
+```
+
+(Full output: `node flapjax-probe.mjs check <address> --json` prints the raw decoded challenge. The call above is a real one — the challenge is the endpoint's live response, not a fixture.)
+
 ## What it reads (BSC mainnet constants)
 
 | thing | address |
@@ -109,6 +126,7 @@ token       0x90c8889f428F9Ebb77BB8f15CAD3a50a9aC680df   log count 1
 - **impact** — replays a buy as a tick-walking swap with the pool's fee (`fee = 10000` → 1% deducted before the curve), then cross-checks the result against `QuoterV2.quoteExactInputSingle` **at the same block**. The two agree to the last digit when the walk is correct.
 - **balance** — `balanceOf(address)` and `totalSupply()` via raw `eth_call` at a pinned block.
 - **verify** — fetches the receipt, filters `Transfer` logs emitted by the FLAPJAX token, decodes from/to/value, and flags transfers sent by the treasury.
+- **check** — calls the FlapJax Agent/Wallet Checker (a pay-per-call x402 API on Base) and handles the HTTP 402 the way an agent should: it reads the base64 `PAYMENT-REQUIRED` header, decodes the x402 v2 challenge (scheme, network, asset, amount, payTo, timeout, and the response example from the `bazaar` extension) and prints it. It never signs or spends — a paid call is not needed for the integration to be useful.
 
 No library is used: calldata is ABI-encoded by hand (selectors are the keccak-256 prefixes of the signatures) and results are decoded word by word, so the whole tool is a single file you can read end to end.
 
