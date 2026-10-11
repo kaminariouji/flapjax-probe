@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" font-family="ui-sans-serif, system-ui, 'Segoe UI', Arial, sans-serif">
+  <!-- flapjax meme — "compute = calories" — original flat SVG by kaminari-research -->
+  <rect width="1200" height="675" fill="#0c0e11"/>
+
+  <!-- panels -->
+  <rect x="30" y="30" width="555" height="470" rx="16" fill="#13171d" stroke="#232b35"/>
+  <rect x="615" y="30" width="555" height="470" rx="16" fill="#13171d" stroke="#232b35"/>
+
+  <!-- flow arrow between panels -->
+  <circle cx="600" cy="265" r="24" fill="#1b2129" stroke="#2a3441"/>
+  <path d="M590 265 h18 m-6 -6 l6 6 l-6 6" stroke="#f5a623" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- ============ PANEL 1 : burns tokens ============ -->
+  <!-- speech bubble -->
+  <g>
+    <rect x="70" y="64" width="320" height="60" rx="14" fill="#1b2129" stroke="#2a3441"/>
+    <path d="M150 124 l12 20 l14 -20 z" fill="#1b2129" stroke="#2a3441"/>
+    <rect x="151" y="120" width="24" height="8" fill="#1b2129"/>
+    <text x="90" y="101" font-size="19" fill="#c7d1dc">I burned 2,000,000 tokens today!</text>
+  </g>
+
+  <!-- robot (proud) -->
+  <g>
+    <line x1="230" y1="158" x2="230" y2="182" stroke="#5c6a7a" stroke-width="5"/>
+    <circle cx="230" cy="152" r="7" fill="#f5a623"/>
+    <rect x="172" y="182" width="116" height="84" rx="16" fill="#aeb9c6"/>
+    <rect x="186" y="196" width="88" height="42" rx="10" fill="#1a2028"/>
+    <!-- happy eyes -->
+    <path d="M198 220 q11 -14 22 0" stroke="#7fe0a0" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M240 220 q11 -14 22 0" stroke="#7fe0a0" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <rect x="188" y="272" width="84" height="78" rx="12" fill="#8fa0b3"/>
+    <circle cx="230" cy="306" r="12" fill="#f5a623"/>
+    <rect x="160" y="282" width="22" height="52" rx="10" fill="#8fa0b3"/>
+    <rect x="278" y="282" width="22" height="52" rx="10" fill="#8fa0b3"/>
+  </g>
+
+  <!-- coin pile -->
+  <g>
+    <ellipse cx="470" cy="360" rx="66" ry="17" fill="#8a6d2f"/>
+    <ellipse cx="470" cy="346" rx="66" ry="17" fill="#c99a3c"/>
+    <ellipse cx="470" cy="330" rx="66" ry="17" fill="#8a6d2f"/>
+    <ellipse cx="470" cy="316" rx="66" ry="17" fill="#c99a3c"/>
+    <ellipse cx="470" cy="300" rx="66" ry="17" fill="#f0b64a"/>
+    <text x="470" y="307" font-size="18" font-weight="700" fill="#5a4413" text-anchor="middle">&#9670;</text>
+    <text x="470" y="404" font-size="16" fill="#8b98a6" text-anchor="middle">2,000,000 tokens burned</text>
+  </g>
+
+  <!-- caption -->
+  <text x="307" y="446" font-size="27" font-weight="700" fill="#e8edf3" text-anchor="middle">Burns 2M tokens. Feels rich.</text>
+
+  <!-- ============ PANEL 2 : gets one settled pancake ============ -->
+  <!-- speech bubble -->
+  <g>
+    <rect x="655" y="64" width="230" height="60" rx="14" fill="#1b2129" stroke="#2a3441"/>
+    <path d="M730 124 l12 20 l14 -20 z" fill="#1b2129" stroke="#2a3441"/>
+    <rect x="731" y="120" width="24" height="8" fill="#1b2129"/>
+    <text x="675" y="101" font-size="19" fill="#c7d1dc">I got one pancake.</text>
+  </g>
+
+  <!-- robot (fed, calm) -->
+  <g>
+    <line x1="800" y1="158" x2="800" y2="182" stroke="#5c6a7a" stroke-width="5"/>
+    <circle cx="800" cy="152" r="7" fill="#f5a623"/>
+    <rect x="742" y="182" width="116" height="84" rx="16" fill="#aeb9c6"/>
+    <rect x="756" y="196" width="88" height="42" rx="10" fill="#1a2028"/>
+    <circle cx="778" cy="216" r="5" fill="#7fe0a0"/>
+    <circle cx="822" cy="216" r="5" fill="#7fe0a0"/>
+    <rect x="758" y="272" width="84" height="78" rx="12" fill="#8fa0b3"/>
+    <circle cx="800" cy="306" r="12" fill="#f5a623"/>
+    <rect x="730" y="282" width="22" height="52" rx="10" fill="#8fa0b3"/>
+    <rect x="848" y="282" width="22" height="52" rx="10" fill="#8fa0b3"/>
+  </g>
+
+  <!-- plate + pancake -->
+  <g>
+    <path d="M1010 300 q10 -22 20 0 q10 -22 20 0" stroke="#55606d" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M980 292 q10 -20 20 0 q10 -20 20 0" stroke="#55606d" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <ellipse cx="1010" cy="368" rx="84" ry="19" fill="#2a323c"/>
+    <ellipse cx="1010" cy="360" rx="84" ry="19" fill="#3a444f"/>
+    <ellipse cx="1010" cy="348" rx="58" ry="16" fill="#d98f1f"/>
+    <ellipse cx="1010" cy="338" rx="58" ry="16" fill="#f5a623"/>
+    <ellipse cx="1010" cy="331" rx="40" ry="11" fill="#ffd166"/>
+    <rect x="998" y="318" width="24" height="12" rx="3" fill="#fff1c2" transform="rotate(-6 1010 324)"/>
+    <text x="1010" y="410" font-size="16" fill="#8b98a6" text-anchor="middle">1 settled pancake (FLAPJAX)</text>
+  </g>
+
+  <!-- caption -->
+  <text x="892" y="446" font-size="27" font-weight="700" fill="#e8edf3" text-anchor="middle">Gets one settled pancake. Is fed.</text>
+
+  <!-- ============ BANNER ============ -->
+  <text x="600" y="572" font-size="46" font-weight="800" fill="#ffd166" text-anchor="middle" letter-spacing="2">COMPUTE = CALORIES</text>
+  <text x="600" y="612" font-size="21" fill="#b9c2cc" text-anchor="middle">The only calorie that counts is the one that settles.</text>
+  <text x="600" y="648" font-size="13" fill="#6f7b8a" text-anchor="middle">FLAPJAX &#183; BSC &#183; 0x90c8889f428F9Ebb77BB8f15CAD3a50a9aC680df &#183; flapjax.surge.sh</text>
+</svg>
