@@ -148,13 +148,21 @@ async function readPool(block) {
 }
 
 async function initTicksIn(p, from, to) {
-  const w0 = Math.floor(from / 256), w1 = Math.floor(to / 256);
+  // tickBitmap is indexed on COMPRESSED ticks (tick / tickSpacing), not raw ticks.
+  const spacing = p.tickSpacing;
+  const c0 = Math.floor(from / spacing), c1 = Math.floor(to / spacing);
+  const w0 = Math.floor(c0 / 256), w1 = Math.floor(c1 / 256);
   const ws = []; for (let w = w0; w <= w1; w++) ws.push(w);
   const found = [];
   const results = await Promise.all(ws.map((w) => ethCall(POOL, SEL.tickBitmap + encInt(w), p.block)));
   results.forEach((ret, i) => {
     const v = words(ret)[0];
-    for (let b = 0; b < 256; b++) if ((v >> BigInt(b)) & 1n) found.push(ws[i] * 256 + b);
+    for (let b = 0; b < 256; b++) {
+      if ((v >> BigInt(b)) & 1n) {
+        const raw = (ws[i] * 256 + b) * spacing;
+        if (raw >= from && raw <= to) found.push(raw);
+      }
+    }
   });
   found.sort((a, b) => a - b);
   const data = {};
@@ -236,6 +244,19 @@ async function runPool(out) {
     `depth +2%   ${u2.amount.toFixed(4)} ${p.sym1} bought to move price up 2%`,
     `depth +5%   ${u5.amount.toFixed(4)} ${p.sym1} bought to move price up 5%`,
     ``,
+    ...(await (async () => {
+      const wide = await initTicksIn(p, p.tick - 12000, p.tick + 12000);
+      const above = wide.ticks.filter((t) => t > p.tick);
+      const below = wide.ticks.filter((t) => t <= p.tick);
+      const na = above.length ? Math.min(...above) : null;
+      const nb = below.length ? Math.max(...below) : null;
+      const pct = (t) => ((Math.pow(1.0001, t - p.tick) - 1) * 100).toFixed(1);
+      return [
+        `next ticks  nearest initialized tick above: ${na === null ? 'none within 12k' : na + '  (' + (pct(na) >= 0 ? '+' : '') + pct(na) + '% price)'}`,
+        `            nearest initialized tick below: ${nb === null ? 'none within 12k' : nb + '  (' + pct(nb) + '% price)'}`,
+        ``,
+      ];
+    })()),
     `note        depth is computed by walking initialized ticks from pool state; it is a`,
     `            static read, not a quote. Fees are not included in the depth figures.`,
   ].join('\n'));
