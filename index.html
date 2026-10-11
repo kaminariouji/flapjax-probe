@@ -335,6 +335,18 @@ $run.addEventListener('click', async () => {
   } finally { $run.disabled = false; }
 });
 $arg.addEventListener('keydown', (e) => { if (e.key === 'Enter') $run.click(); });
+
+// deep link: ?run=pool | ?run=impact&arg=0.1 | ?run=balance&arg=0x... | ?run=verify&arg=0x...
+const qs = new URLSearchParams(location.search);
+if (qs.get('run')) {
+  const v = qs.get('run');
+  if (['pool', 'impact', 'balance', 'verify'].includes(v)) {
+    $cmd.value = v;
+    $hint.textContent = HINTS[v];
+    $arg.value = qs.get('arg') || '';
+    setTimeout(() => $run.click(), 50);
+  }
+}
 </script>
 </body>
 </html>
