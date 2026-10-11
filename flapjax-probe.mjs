@@ -167,37 +167,47 @@ const tickNetOf = (scan, t) => scan.data[t]?.net ?? 0
 const sqrtPAt = (t) => Math.pow(1.0001, t / 2)
 
 // --- depth: amount needed to move the price by a ratio (0.98 = -2%, 1.05 = +5%) ---
+// Returns both sides of the move. Input amounts are NET (fee-excluded): the amount
+// the curve itself absorbs. Multiply by 1/(1-fee) for the gross trader cost.
 function depthDown(p, scan, ratio) {
   const spT = p.sp0 * Math.sqrt(ratio)
   const tT = (2 * Math.log(spT)) / Math.log(1.0001)
   const bounds = scan.ticks.filter((t) => t <= p.tick && t >= tT).sort((a, b) => b - a)
-  let L = p.L, cur = p.sp0, amt0 = 0, crossed = 0
+  let L = p.L, cur = p.sp0, amt0 = 0, amt1 = 0, crossed = 0
   for (const t of bounds) {
     const spt = sqrtPAt(t)
     amt0 += L * (1 / spt - 1 / cur)
+    amt1 += L * (cur - spt)
     cur = spt
     L -= tickNetOf(scan, t)
     crossed++
     if (L <= 0) break
   }
-  if (L > 0) amt0 += L * (1 / spT - 1 / cur)
-  return { amountToken0: amt0 / 10 ** p.dec0, crossed }
+  if (L > 0) {
+    amt0 += L * (1 / spT - 1 / cur)
+    amt1 += L * (cur - spT)
+  }
+  return { amountToken0: amt0 / 10 ** p.dec0, amountToken1: amt1 / 10 ** p.dec1, crossed }
 }
 function depthUp(p, scan, ratio) {
   const spT = p.sp0 * Math.sqrt(ratio)
   const tT = (2 * Math.log(spT)) / Math.log(1.0001)
   const bounds = scan.ticks.filter((t) => t > p.tick && t <= tT).sort((a, b) => a - b)
-  let L = p.L, cur = p.sp0, amt1 = 0, crossed = 0
+  let L = p.L, cur = p.sp0, amt1 = 0, amt0 = 0, crossed = 0
   for (const t of bounds) {
     const spt = sqrtPAt(t)
     amt1 += L * (spt - cur)
+    amt0 += L * (1 / cur - 1 / spt)
     cur = spt
     L += tickNetOf(scan, t)
     crossed++
     if (L <= 0) break
   }
-  if (L > 0) amt1 += L * (spT - cur)
-  return { amountToken1: amt1 / 10 ** p.dec1, crossed }
+  if (L > 0) {
+    amt1 += L * (spT - cur)
+    amt0 += L * (1 / cur - 1 / spT)
+  }
+  return { amountToken1: amt1 / 10 ** p.dec1, amountToken0: amt0 / 10 ** p.dec0, crossed }
 }
 
 // --- buy simulation (WBNB in -> FLAPJAX out), tick-walking with the 1% fee ---
@@ -299,7 +309,40 @@ async function cmdPool() {
   console.log(`            nearest initialized tick below: ${nb === null ? 'none within 12k' : nb + '  (' + pct(nb) + '% price)'}`)
   console.log('')
   console.log(`note        depth is computed by walking initialized ticks from pool state; it is a`)
-  console.log(`            static read, not a quote. Fees are not included in the depth figures.`)
+  console.log(`            static read, not a quote. Fees are not included in the depth figures`)
+  console.log(`            (run 'depth' to see the same numbers with and without the fee).`)
+}
+
+async function cmdDepth() {
+  const now = await latestBlock()
+  const block = now - 5
+  const blk = await rpc('eth_getBlockByNumber', [toHexBlock(block), false])
+  const ts = new Date(Number(BigInt(blk.timestamp)) * 1000).toISOString()
+  const p = await readPool(block)
+  const span = Math.ceil((2 * Math.log(1.05)) / Math.log(1.0001)) + 256
+  const scan = await initTicksIn(p, p.tick - span, p.tick + span)
+  const d2 = depthDown(p, scan, 0.98)
+  const d5 = depthDown(p, scan, 0.95)
+  const u2 = depthUp(p, scan, 1.02)
+  const u5 = depthUp(p, scan, 1.05)
+  const feeMult = 1 - p.fee / 1e6
+  const g = (x, dec) => (x / feeMult).toLocaleString('en-US', { maximumFractionDigits: dec })
+  const n = (x, dec) => x.toLocaleString('en-US', { maximumFractionDigits: dec })
+  console.log(`FLAPJAX depth — BOTH fee conventions shown — BSC block ${block} (${ts})`)
+  console.log(`pool ${POOL}`)
+  console.log(`fee ${p.fee / 10000}%  tick ${p.tick}  L ${p.L.toExponential(6)}  spot 1 ${p.sym0} = ${p.spot.toExponential(6)} ${p.sym1}`)
+  console.log('')
+  console.log('move   in NET (curve absorbs)      in GROSS (trader pays)      out (no fee on output)')
+  console.log(`-2%    ${n(d2.amountToken0, 2).padEnd(26)} ${g(d2.amountToken0, 2).padEnd(26)} ${d2.amountToken1.toFixed(6)} ${p.sym1}`)
+  console.log(`-5%    ${n(d5.amountToken0, 2).padEnd(26)} ${g(d5.amountToken0, 2).padEnd(26)} ${d5.amountToken1.toFixed(6)} ${p.sym1}`)
+  console.log(`+2%    ${n(u2.amountToken1, 6).padEnd(26)} ${g(u2.amountToken1, 6).padEnd(26)} ${n(u2.amountToken0, 2)} ${p.sym0}`)
+  console.log(`+5%    ${n(u5.amountToken1, 6).padEnd(26)} ${g(u5.amountToken1, 6).padEnd(26)} ${n(u5.amountToken0, 2)} ${p.sym0}`)
+  console.log('')
+  console.log('note   "NET" is the amount the curve itself absorbs (fee excluded); "GROSS" is what a')
+  console.log(`       trader must spend so that NET reaches the curve: gross = net / ${feeMult.toFixed(2)}.`)
+  console.log('       Two reports that differ by exactly the pool fee are using different conventions,')
+  console.log('       not disagreeing about the pool. Output side pays no fee, so it matches either way.')
+  console.log(`       ticks crossed: -2% ${d2.crossed}, -5% ${d5.crossed}, +2% ${u2.crossed}, +5% ${u5.crossed} (0 = single constant-L segment)`)
 }
 
 async function cmdImpact(args) {
@@ -374,6 +417,7 @@ const [cmd, ...args] = process.argv.slice(2)
 const usage = `flapjax-probe — read-only FLAPJAX on-chain probe (BSC)
 
   node flapjax-probe.mjs pool                 pool state, spot, depth +/-2% and +/-5%
+  node flapjax-probe.mjs depth                depth with BOTH fee conventions (net vs gross)
   node flapjax-probe.mjs impact <BNB>         buy impact, cross-checked vs QuoterV2
   node flapjax-probe.mjs balance <address>    balanceOf + supply share at a named block
   node flapjax-probe.mjs verify <txhash>      decode FLAPJAX Transfers in a tx
@@ -382,6 +426,7 @@ No keys. No signing. Reads public BSC RPCs only.`
 
 try {
   if (cmd === 'pool') await cmdPool()
+  else if (cmd === 'depth') await cmdDepth()
   else if (cmd === 'impact') await cmdImpact(args)
   else if (cmd === 'balance') await cmdBalance(args)
   else if (cmd === 'verify') await cmdVerify(args)
