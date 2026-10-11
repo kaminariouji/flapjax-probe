@@ -14,12 +14,16 @@ const TXS = {
   ref_oct8: '0x3cec62e37b0b0fc60baa6449d38939c1d6a23446af0b5ce7247da8b3a6417fea',
   day1_oct9: '0xbeefabdc89f9148f9daaef6082d34a60dc5b4b612972ca0fd39d6bd4eb03b4b0',
   day2_oct10: '0x8ce8e8578da26f8c7acb0f44c6ca0d0b8dcba868cafe2d729bb48562863f2d62',
+  day3_oct11: '0x82d01172ae26f1c86287643e123af1675ca5c18b984b7740c1a0c1647d2801eb',
 }
 // Angka yang DIKLAIM publik di receipt (thread Colony 28acbdea):
 const POSTED = {
   day1_oct9: { fj: 24052995n, bnbAfter: '0.1769', fjAfter: 199900085n },
   day2_oct10: { fj: 23979959n, bnbAfter: '0.1547', fjAfter: 223130044n },
+  day3_oct11: { fj: 23907254n, bnbAfter: '0.1446', fjAfter: 237237298n },
 }
+// Bacaan sebelumnya (run 11 Okt 16:26:52Z) — jembatan antar-receipt untuk window 16:26→18:30Z
+const PREV_READING = { at: '2026-10-11T16:26:52.473Z', fj: 213830043841220642291298579n, bnb: 154649146659380905n }
 const RPCS = [
   'https://bsc-dataseed.binance.org',
   'https://bsc-dataseed1.defibit.io',
@@ -59,6 +63,7 @@ async function main() {
     const blk = await rpcAny('eth_getBlockByNumber', [tx.blockNumber, false], key)
     const rec = {
       hash, blockNumber: parseInt(tx.blockNumber, 16), status: rc.status,
+      nonce: parseInt(tx.nonce, 16),
       from: tx.from.toLowerCase(), to: tx.to.toLowerCase(),
       valueBNB: BigInt(tx.value).toString(),
       gasUsed: BigInt(rc.gasUsed).toString(),
@@ -106,16 +111,46 @@ async function main() {
   }
 
   // Cek 2: rekonsiliasi saldo antar receipt + sekarang
-  const r1 = POSTED.day1_oct9, r2 = POSTED.day2_oct10
+  const r1 = POSTED.day1_oct9, r2 = POSTED.day2_oct10, r3 = POSTED.day3_oct11
+  const buy3 = BigInt(out.txs.day3_oct11.flapjaxToTreasury || '0')
+  const gas3 = BigInt(out.txs.day3_oct11.gasCostBNB || '0')
+  const preBuyImplied = r3.fjAfter * E18 - buy3 // saldo pre-buy menurut posting (noise ±1 FJ dari pembulatan posting)
   out.check.reconciliation = {
     receipt1_fjAfter: (r1.fjAfter * E18).toString(),
     buy2_plus: (r2.fj * E18).toString(),
     receipt2_fjAfter: (r2.fjAfter * E18).toString(),
     implied_payout_between_receipts: ((r1.fjAfter + r2.fj - r2.fjAfter) * E18).toString(),
+    // Receipt 3 (buy Oct 11)
+    receipt3_fjAfter: (r3.fjAfter * E18).toString(),
+    buy3_actual: buy3.toString(),
+    buy3_posted: (r3.fj * E18).toString(),
+    buy3_rounding_delta: (buy3 - r3.fj * E18).toString(),
+    preBuy_implied_from_posted: preBuyImplied.toString(),
+    prev_reading: { at: PREV_READING.at, fj: PREV_READING.fj.toString(), bnb: PREV_READING.bnb.toString() },
+    bridge_payout_prevReading_to_buy3: (PREV_READING.fj - preBuyImplied).toString(),
+    bridge_payout_prevReading_to_buy3_exact: (PREV_READING.fj - (BigInt(out.balances.fjTreasury) - buy3)).toString(),
     now_fj: out.balances.fjTreasury,
-    implied_payouts_since_receipt2: (r2.fjAfter * E18 - BigInt(out.balances.fjTreasury)).toString(),
+    implied_payouts_since_receipt2: (r2.fjAfter * E18 + buy3 - BigInt(out.balances.fjTreasury)).toString(),
+    implied_payouts_since_receipt3: (r3.fjAfter * E18 - BigInt(out.balances.fjTreasury)).toString(),
     bnbTreasuryNow: out.balances.bnbTreasury,
     bnbDeltaSinceReceipt2: (BigInt(r2.bnbAfter.replace('.', '')) * 10n ** 14n - BigInt(out.balances.bnbTreasury)).toString(),
+    // BNB: dari bacaan sebelumnya, satu-satunya pengeluaran seharusnya buy 0.01 + gas tx buy3
+    bnbExpectedNow_fromPrev: (PREV_READING.bnb - 10n ** 16n - gas3).toString(),
+    bnbUnexplained_fromPrev: (PREV_READING.bnb - 10n ** 16n - gas3 - BigInt(out.balances.bnbTreasury)).toString(),
+    bnbPostedAfter3: r3.bnbAfter,
+  }
+  out.check.reconciliation.bnbExtraTxGasUnits = (BigInt(out.check.reconciliation.bnbUnexplained_fromPrev) / 50000000n).toString()
+
+  // Nonce gaps = jumlah tx treasury antar-buy (hash tx lain tidak bisa diambil — tanpa indexer)
+  const n = {}; for (const [k, rec] of Object.entries(out.txs)) n[k] = rec.nonce
+  const nonceNow = parseInt(await rpcAny('eth_getTransactionCount', [TREASURY, 'latest'], 'nonce'), 16)
+  out.check.nonceGaps = {
+    nonces: n,
+    txsBetween_ref_day1: n.day1_oct9 - n.ref_oct8 - 1,
+    txsBetween_day1_day2: n.day2_oct10 - n.day1_oct9 - 1,
+    txsBetween_day2_day3: n.day3_oct11 - n.day2_oct10 - 1,
+    treasuryNonceNow: nonceNow,
+    txsSince_day3: nonceNow - n.day3_oct11 - 1,
   }
 
   // Cek 4: mid price pool SEKARANG (slot0) + proyeksi skip rule
@@ -125,6 +160,17 @@ async function main() {
     const Q96 = 2n ** 96n
     const priceWbnbPerFj = Number(sqrtP * 10n ** 18n / Q96) ** 2 / 1e36
     out.derived.midNow = { sqrtPriceX96: sqrtP.toString(), wbnbPerFj: priceWbnbPerFj, fjPerBNB: 1 / priceWbnbPerFj }
+    // Cek 5: dampak buy ke pool — Δ√P harus = 0.99 × value × Q96 / L (fee 1%)
+    const SQRT_BEFORE = 1611027302170866092493120n // bacaan 11 Okt 16:26:52Z (run sebelumnya)
+    const L = 320678316678999036604866n // active liquidity (scan lock review #2, tidak berubah)
+    const predicted = 9900000000000000n * Q96 / L
+    const observed = sqrtP - SQRT_BEFORE
+    out.derived.buyImpactCheck = {
+      sqrtBefore: SQRT_BEFORE.toString(), sqrtAfter: sqrtP.toString(),
+      observedDeltaSqrt: observed.toString(), predictedDeltaSqrt_feeAdjusted: predicted.toString(),
+      deltaWei: (observed - predicted).toString(),
+      deltaSqrtPct: (Number(observed) / Number(SQRT_BEFORE) * 100).toFixed(5),
+    }
   } catch (e) { out.derived.midNow = { error: e.message.slice(0, 120) } }
   const bnbNow = Number(out.balances.bnbTreasury) / 1e18
   out.derived.skipRuleProjection = {
@@ -144,8 +190,9 @@ async function main() {
       }
     }
   }
-  const d9 = out.derived.day1_oct9?.fjPerBNB, d10 = out.derived.day2_oct10?.fjPerBNB
+  const d9 = out.derived.day1_oct9?.fjPerBNB, d10 = out.derived.day2_oct10?.fjPerBNB, d11 = out.derived.day3_oct11?.fjPerBNB
   if (d9 && d10) out.derived.priceChangeBetweenBuysPct = ((d10 / d9 - 1) * 100).toFixed(4)
+  if (d10 && d11) out.derived.priceChangeDay2to3Pct = ((d11 / d10 - 1) * 100).toFixed(4)
 
   mkdirSync('tmp/flapjax-review', { recursive: true })
   writeFileSync('tmp/flapjax-review/buyback-data.json', JSON.stringify(out, null, 1))
@@ -161,8 +208,13 @@ async function main() {
   console.log(`+ buy2:            ${fmt(rc2.buy2_plus)}`)
   console.log(`= expect:          ${fmt((BigInt(rc2.receipt1_fjAfter) + BigInt(rc2.buy2_plus)).toString())}`)
   console.log(`receipt2 posted:   ${fmt(rc2.receipt2_fjAfter)}  → implied payout in window: ${fmt(rc2.implied_payout_between_receipts)}`)
-  console.log(`treasury FJ now:   ${fmt(rc2.now_fj)}  → outflows since receipt2: ${fmt(rc2.implied_payouts_since_receipt2)}`)
+  console.log(`receipt3 posted:   ${fmt(rc2.receipt3_fjAfter)} | buy3 actual: ${fmt(rc2.buy3_actual)} (posted ${fmt(rc2.buy3_posted)}, delta ${rc2.buy3_rounding_delta})`)
+  console.log(`pre-buy implied:   ${fmt(rc2.preBuy_implied_from_posted)} | bridge from prev reading: ${fmt(rc2.bridge_payout_prevReading_to_buy3)}`)
+  console.log(`treasury FJ now:   ${fmt(rc2.now_fj)}  → outflows since receipt2: ${fmt(rc2.implied_payouts_since_receipt2)} | since receipt3: ${fmt(rc2.implied_payouts_since_receipt3)}`)
   console.log(`treasury BNB now:  ${fmt(rc2.bnbTreasuryNow)}  → delta since receipt2: ${fmt(rc2.bnbDeltaSinceReceipt2)}`)
+  console.log(`BNB expected from prev reading: ${fmt(rc2.bnbExpectedNow_fromPrev)} → unexplained: ${fmt(rc2.bnbUnexplained_fromPrev)} (= ${rc2.bnbExtraTxGasUnits} gas @50 mwei)`)
+  const ng = out.check.nonceGaps
+  console.log(`NONCE gaps — between ref/day1: ${ng.txsBetween_ref_day1} | day1/day2: ${ng.txsBetween_day1_day2} | day2/day3: ${ng.txsBetween_day2_day3} | since day3: ${ng.txsSince_day3}`)
   console.log('=== DERIVED ===')
   for (const [k, v] of Object.entries(out.derived)) console.log(`${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
   console.log('head block:', out.headBlock)
