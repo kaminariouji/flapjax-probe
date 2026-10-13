@@ -1,0 +1,432 @@
+{
+  "task": "Receipt Relay Q23 — FlapJax 10-12 receipt vs BSC chain",
+  "auditor": {
+    "handle": "@kaminari-research",
+    "wallet": "0x8c062dc5d775b7d5efc168f75a875f392f53dcdf"
+  },
+  "window": {
+    "lowBlock": 127067714,
+    "highBlock": 127261245,
+    "buy11Block": 127067713,
+    "buy12Block": 127261246
+  },
+  "treasury": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+  "flapjaxToken": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+  "balanceReads": {
+    "127067713": "144640083559380905",
+    "127067714": "144640083559380905",
+    "127261245": "142613528959380905",
+    "127261246": "132607152559380905"
+  },
+  "blockTimes": {
+    "127067713": {
+      "timestamp": 1791743435,
+      "iso": "2026-10-11T18:30:35.000Z"
+    },
+    "127067714": {
+      "timestamp": 1791743436,
+      "iso": "2026-10-11T18:30:36.000Z"
+    },
+    "127145974": {
+      "timestamp": 1791778842,
+      "iso": "2026-10-12T04:20:42.000Z"
+    },
+    "127145984": {
+      "timestamp": 1791778847,
+      "iso": "2026-10-12T04:20:47.000Z"
+    },
+    "127145995": {
+      "timestamp": 1791778852,
+      "iso": "2026-10-12T04:20:52.000Z"
+    },
+    "127220237": {
+      "timestamp": 1791812318,
+      "iso": "2026-10-12T13:38:38.000Z"
+    },
+    "127220254": {
+      "timestamp": 1791812325,
+      "iso": "2026-10-12T13:38:45.000Z"
+    },
+    "127220342": {
+      "timestamp": 1791812365,
+      "iso": "2026-10-12T13:39:25.000Z"
+    },
+    "127220352": {
+      "timestamp": 1791812369,
+      "iso": "2026-10-12T13:39:29.000Z"
+    },
+    "127220361": {
+      "timestamp": 1791812373,
+      "iso": "2026-10-12T13:39:33.000Z"
+    },
+    "127220370": {
+      "timestamp": 1791812377,
+      "iso": "2026-10-12T13:39:37.000Z"
+    },
+    "127220380": {
+      "timestamp": 1791812382,
+      "iso": "2026-10-12T13:39:42.000Z"
+    },
+    "127220390": {
+      "timestamp": 1791812386,
+      "iso": "2026-10-12T13:39:46.000Z"
+    },
+    "127220507": {
+      "timestamp": 1791812439,
+      "iso": "2026-10-12T13:40:39.000Z"
+    },
+    "127221307": {
+      "timestamp": 1791812800,
+      "iso": "2026-10-12T13:46:40.000Z"
+    },
+    "127229962": {
+      "timestamp": 1791816696,
+      "iso": "2026-10-12T14:51:36.000Z"
+    },
+    "127261245": {
+      "timestamp": 1791830786,
+      "iso": "2026-10-12T18:46:26.000Z"
+    },
+    "127261246": {
+      "timestamp": 1791830787,
+      "iso": "2026-10-12T18:46:27.000Z"
+    }
+  },
+  "fjBalanceReads": {
+    "127067713": "237237297806810631976334347",
+    "127261245": "231707297806810631976334347",
+    "127261246": "255542177328574524113562675"
+  },
+  "transactions": [
+    {
+      "hash": "0x82d01172ae26f1c86287643e123af1675ca5c18b984b7740c1a0c1647d2801eb",
+      "block": 127067713,
+      "label": "buy-10-11",
+      "status": "0x1",
+      "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+      "to": "0x1b81d678ffb9c0263b24a97847620c99d213eb14",
+      "valueWei": "10000000000000000",
+      "gasUsed": "127554",
+      "effectiveGasPriceWei": "50000000",
+      "feeWei": "6377700000000",
+      "inputSelector": "0xac9650d8",
+      "fjLogs": [
+        {
+          "from": "0xca93ec685b8623688e6b236f9068034b298c2150",
+          "to": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+          "value": "23907253965589989685035768"
+        }
+      ]
+    },
+    {
+      "hash": "0xffadd9467036e23f558df95338aad9ffcde86fcf3859fd09303a7d926b17817e",
+      "block": 127145974,
+      "label": "out",
+      "status": "0x1",
+      "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+      "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+      "valueWei": "0",
+      "gasUsed": "53708",
+      "effectiveGasPriceWei": "50000000",
+      "feeWei": "2685400000000",
+      "inputSelector": "0xa9059cbb",
+      "fjLogs": [
+        {
+          "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+          "to": "0x5047384cdb02d1117abece1f7a01d2b0e39c793f",
+          "value": "250000000000000000000000"
+        }
+      ]
+    },
+    {
+      "hash": "0xef4805a7b386055c1aac60c28fa4267190c335aeaae04217a50c705004d98afc",
+      "block": 127145984,
+      "label": "out",
+      "status": "0x1",
+      "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+      "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+      "valueWei": "0",
+      "gasUsed": "36608",
+      "effectiveGasPriceWei": "50000000",
+      "feeWei": "1830400000000",
+      "inputSelector": "0xa9059cbb",
+      "fjLogs": [
+        {
+          "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+          "to": "0x5047384cdb02d1117abece1f7a01d2b0e39c793f",
+          "value": "500000000000000000000000"
+        }
+      ]
+    },
+    {
+      "hash": "0x34a2f8ed9f9db71698d9881e09387ba2bc1997b250b9e7811e3fd737b8f84d50",
+      "block": 127145995,
+      "label": "out",
+      "status": "0x1",
+      "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+      "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+      "valueWei": "0",
+      "gasUsed": "36608",
+      "effectiveGasPriceWei": "50000000",
+      "feeWei": "1830400000000",
+      "inputSelector": "0xa9059cbb",
+      "fjLogs": [
+        {
+          "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+          "to": "0x5047384cdb02d1117abece1f7a01d2b0e39c793f",
+          "value": "500000000000000000000000"
+        }
+      ]
+    },
+    {
+      "hash": "0xc2193a974bf92cb1f908dbfa537c4a21b347a6498f2a46c61c8b48e88e5e9cdd",
+      "block": 127220237,
+      "label": "out",
+      "status": "0x1",
+      "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+      "to": "0x9486b3304caca38ef42148ec8618925f15b3759e",
+      "valueWei": "2000000000000000",
+      "gasUsed": "21000",
+      "effectiveGasPriceWei": "50000000",
+      "feeWei": "1050000000000",
+      "inputSelector": "0x",
+      "fjLogs": []
+    },
+    {
+      "hash": "0x9df9a7a9552f8d28c38f9434b9546838b6614f8d8639f8cb39a84780beb22bd5",
+      "block": 127220254,
+      "label": "out",
+      "status": "0x1",
+      "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+      "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+      "valueWei": "0",
+      "gasUsed": "36596",
+      "effectiveGasPriceWei": "50000000",
+      "feeWei": "1829800000000",
+      "inputSelector": "0xa9059cbb",
+      "fjLogs": [
+        {
+          "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+          "to": "0x8c062dc5d775b7d5efc168f75a875f392f53dcdf",
+          "value": "80000000000000000000000"
+        }
+      ]
+    },
+    {
+      "hash": "0xdc2b35954374fc028058700f8feadb98d85b9c2b391c185bc5c2846be6f77f01",
+      "block": 127220342,
+      "label": "out",
+      "status": "0x1",
+      "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+      "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+      "valueWei": "0",
+      "gasUsed": "36608",
+      "effectiveGasPriceWei": "50000000",
+      "feeWei": "1830400000000",
+      "inputSelector": "0xa9059cbb",
+      "fjLogs": [
+        {
+          "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+          "to": "0x8c062dc5d775b7d5efc168f75a875f392f53dcdf",
+          "value": "500000000000000000000000"
+        }
+      ]
+    },
+    {
+      "hash": "0x25f0688f5eee0421e373dafe0d7c142d411df46f591b062f8a8ab2ff80160f78",
+      "block": 127220352,
+      "label": "out",
+      "status": "0x1",
+      "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+      "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+      "valueWei": "0",
+      "gasUsed": "36608",
+      "effectiveGasPriceWei": "50000000",
+      "feeWei": "1830400000000",
+      "inputSelector": "0xa9059cbb",
+      "fjLogs": [
+        {
+          "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+          "to": "0x8c062dc5d775b7d5efc168f75a875f392f53dcdf",
+          "value": "250000000000000000000000"
+        }
+      ]
+    },
+    {
+      "hash": "0xe5e1c5cce7b617a7313d9580dcf43a10001f22df39af939595e5b0de40680542",
+      "block": 127220361,
+      "label": "out",
+      "status": "0x1",
+      "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+      "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+      "valueWei": "0",
+      "gasUsed": "36608",
+      "effectiveGasPriceWei": "50000000",
+      "feeWei": "1830400000000",
+      "inputSelector": "0xa9059cbb",
+      "fjLogs": [
+        {
+          "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+          "to": "0x8c062dc5d775b7d5efc168f75a875f392f53dcdf",
+          "value": "2000000000000000000000000"
+        }
+      ]
+    },
+    {
+      "hash": "0x99f9709a02f73985710b681c605bc95595b1de91f4989b83f993928cc6e4b28d",
+      "block": 127220370,
+      "label": "out",
+      "status": "0x1",
+      "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+      "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+      "valueWei": "0",
+      "gasUsed": "36608",
+      "effectiveGasPriceWei": "50000000",
+      "feeWei": "1830400000000",
+      "inputSelector": "0xa9059cbb",
+      "fjLogs": [
+        {
+          "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+          "to": "0x4a6419ee9666acaa6755fc0aebb27f48743c1e1e",
+          "value": "250000000000000000000000"
+        }
+      ]
+    },
+    {
+      "hash": "0x2b9e350db56f6aac54ad7bd44837fb1f3e3e0458e7af5b1d82c03bae48b8fc8a",
+      "block": 127220380,
+      "label": "out",
+      "status": "0x1",
+      "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+      "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+      "valueWei": "0",
+      "gasUsed": "36608",
+      "effectiveGasPriceWei": "50000000",
+      "feeWei": "1830400000000",
+      "inputSelector": "0xa9059cbb",
+      "fjLogs": [
+        {
+          "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+          "to": "0x4a6419ee9666acaa6755fc0aebb27f48743c1e1e",
+          "value": "250000000000000000000000"
+        }
+      ]
+    },
+    {
+      "hash": "0x12677707569e24cfa728878b46ff4e895fb894da4b39d59f618ab55c9820cc4e",
+      "block": 127220390,
+      "label": "out",
+      "status": "0x1",
+      "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+      "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+      "valueWei": "0",
+      "gasUsed": "36608",
+      "effectiveGasPriceWei": "50000000",
+      "feeWei": "1830400000000",
+      "inputSelector": "0xa9059cbb",
+      "fjLogs": [
+        {
+          "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+          "to": "0x4a6419ee9666acaa6755fc0aebb27f48743c1e1e",
+          "value": "500000000000000000000000"
+        }
+      ]
+    },
+    {
+      "hash": "0xbc92eaf19ab0c57ab6738532d998591146935ff8d14e3903cb7dae2743030b71",
+      "block": 127220507,
+      "label": "out",
+      "status": "0x1",
+      "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+      "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+      "valueWei": "0",
+      "gasUsed": "36608",
+      "effectiveGasPriceWei": "50000000",
+      "feeWei": "1830400000000",
+      "inputSelector": "0xa9059cbb",
+      "fjLogs": [
+        {
+          "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+          "to": "0x5c7a79549e4413a52b1787b5c7e10368720d2358",
+          "value": "250000000000000000000000"
+        }
+      ]
+    },
+    {
+      "hash": "0xea9a5fbcaa21ca5f70f17885a3771145b86c002b22a51d60b3fde4dc43565d92",
+      "block": 127221307,
+      "label": "out",
+      "status": "0x1",
+      "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+      "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+      "valueWei": "0",
+      "gasUsed": "36608",
+      "effectiveGasPriceWei": "50000000",
+      "feeWei": "1830400000000",
+      "inputSelector": "0xa9059cbb",
+      "fjLogs": [
+        {
+          "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+          "to": "0x5c7a79549e4413a52b1787b5c7e10368720d2358",
+          "value": "100000000000000000000000"
+        }
+      ]
+    },
+    {
+      "hash": "0xa5b52de36c7a9167ec2c64a6f49af704e07deddd16a41328f0ade85c9c396837",
+      "block": 127229962,
+      "label": "out",
+      "status": "0x1",
+      "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+      "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+      "valueWei": "0",
+      "gasUsed": "53708",
+      "effectiveGasPriceWei": "50000000",
+      "feeWei": "2685400000000",
+      "inputSelector": "0xa9059cbb",
+      "fjLogs": [
+        {
+          "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+          "to": "0xfd5efa5c47fb3be071b2fd38fc88dfa30318c5d2",
+          "value": "100000000000000000000000"
+        }
+      ]
+    },
+    {
+      "hash": "0x9afdc96e3ca876b5b617a26ba5105012ed8c33e805c77b1616bf48c198d5cbf1",
+      "block": 127261246,
+      "label": "buy-10-12",
+      "status": "0x1",
+      "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+      "to": "0x1b81d678ffb9c0263b24a97847620c99d213eb14",
+      "valueWei": "10000000000000000",
+      "gasUsed": "127528",
+      "effectiveGasPriceWei": "50000000",
+      "feeWei": "6376400000000",
+      "inputSelector": "0xac9650d8",
+      "fjLogs": [
+        {
+          "from": "0xca93ec685b8623688e6b236f9068034b298c2150",
+          "to": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+          "value": "23834879521763892137228328"
+        }
+      ]
+    }
+  ],
+  "computed": {
+    "sumValueWei": "2000000000000000",
+    "sumFeesWei": "26554600000000",
+    "totalNonBuyOutWei": "2026554600000000",
+    "payoutGroupFeesWei": "25504600000000",
+    "grantGroupValueWei": "2000000000000000",
+    "grantGroupFeesWei": "1050000000000",
+    "receivedWei": "0",
+    "gapAfterEquationWei": "0",
+    "gapAfterBuyWei": "0",
+    "fjOutWindowWei": "5530000000000000000000000"
+  },
+  "receiptLine": {
+    "text": "Non-buy BNB out since last receipt: 0.000025 fees",
+    "verdict": "MISMATCH — actual non-buy BNB out 0.0020265546 (0.002 gas grant omitted; fees 0.0000265546 vs stated 0.000025)"
+  }
+}
