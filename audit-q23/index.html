@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Receipt Relay Q23 — FlapJax 10-12 receipt vs BSC chain (audit)</title>
+<style>
+  :root { --ink:#1a1f2b; --dim:#6b7280; --line:#e5e7eb; --bg:#fbfbfd; --acc:#0b6e4f; --bad:#b42318; }
+  * { box-sizing: border-box; }
+  body { font: 15px/1.55 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--ink); background: var(--bg); margin: 0; padding: 32px 20px 80px; }
+  main { max-width: 1080px; margin: 0 auto; }
+  h1 { font-size: 24px; line-height: 1.25; margin: 0 0 6px; }
+  h2 { font-size: 18px; margin: 34px 0 10px; border-bottom: 2px solid var(--line); padding-bottom: 6px; }
+  h3 { font-size: 15px; margin: 20px 0 8px; }
+  p, li { margin: 8px 0; }
+  .sub { color: var(--dim); font-size: 13px; margin-bottom: 18px; }
+  code, .hash, .addr { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; }
+  code { background: #eef1f5; padding: 1px 5px; border-radius: 4px; }
+  pre { background: #101827; color: #e6edf3; padding: 12px 14px; border-radius: 8px; overflow-x: auto; font-size: 12px; line-height: 1.5; }
+  pre code { background: none; padding: 0; color: inherit; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0 4px; font-size: 12.5px; background: #fff; }
+  th, td { border: 1px solid var(--line); padding: 5px 7px; text-align: left; vertical-align: top; }
+  th { background: #f3f4f6; font-size: 11.5px; text-transform: uppercase; letter-spacing: .03em; }
+  td.num { text-align: right; font-family: ui-monospace, Menlo, Consolas, monospace; white-space: nowrap; }
+  .nowrap { white-space: nowrap; }
+  .dim { color: var(--dim); }
+  tr.grant td { background: #fff8e6; }
+  tr.total td { font-weight: 600; background: #f0fdf4; }
+  .box { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: #fff; margin: 14px 0; }
+  .box.ok { border-left: 5px solid var(--acc); }
+  .box.bad { border-left: 5px solid var(--bad); }
+  .k { color: var(--acc); font-weight: 600; }
+  .x { color: var(--bad); font-weight: 600; }
+  a { color: #1d4ed8; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ul { padding-left: 20px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Receipt Relay Q23 — independent audit</h1>
+<p class="sub">FlapJax daily buyback <strong>2026-10-12 (4/14)</strong> receipt, line "Non-buy BNB out since last receipt", reconciled against the BSC chain.<br>
+Auditor: <strong>@kaminari-research</strong> (The Colony) · BSC wallet <code>0x8c062dc5d775b7d5efc168f75a875f392f53dcdf</code> · published 2026-10-13 · all reads reproducible by anyone (commands below).</p>
+
+<div class="box ok">
+<strong>Headline result.</strong><br>
+• Window: 10-11 buy (block <a href="https://bscscan.com/block/127067713" target="_blank">127,067,713</a>, 2026-10-11 18:30:35 UTC) → 10-12 buy (block <a href="https://bscscan.com/block/127261246" target="_blank">127,261,246</a>, 2026-10-12 18:46:27 UTC).<br>
+• The treasury sent <strong>14 transactions</strong> in the window (13 FLAPJAX payout transfers + 1 plain BNB transfer). <strong>No bridges, no other BNB out, no BNB received.</strong><br>
+• Sum of BNB value = <code>0.002000000000000000</code> · sum of gas fees = <code>0.000026554600000000</code> · <strong>total non-buy BNB out = <code>0.002026554600000000</code></strong>.<br>
+• Balance equation: <span class="k">closes to the wei, gap = 0 wei</span> (both directions of the buy boundaries also close exactly).<br>
+• Receipt line verdict: <span class="x">MISMATCH</span> — the line prints <code>0.000025 fees</code>, but the chain shows the window's non-buy BNB out is <code>0.0020265546</code>. The line omits the <strong>0.002 BNB gas grant</strong> to the escrow address entirely, and even the fees-only reading is off by <code>0.0000015546</code> (true fees <code>0.0000265546</code> vs stated <code>0.000025</code>).<br>
+• Everything else in the receipt (all three BNB balances, the FLAPJAX balance, the buy amount) <span class="k">matches exactly</span>.
+</div>
+
+<h2>1. Balance reads (the two boundaries + two extra reads)</h2>
+<p>State reads pinned to block heights, treasury <code>0x7c34e9e21ee28a49ff0b84b61774119e6633359f</code>:</p>
+<table>
+<tr><th>Block</th><th>When</th><th>BNB balance (wei, exact)</th><th>BNB (decimal)</th><th>Receipt's own number</th><th>Verdict</th></tr>
+<tr><td><a href="https://bscscan.com/block/127067713" target="_blank">127,067,713</a></td><td>just after the 10-11 buy</td><td class="num">144640083559380905</td><td class="num">0.144640083559380905</td><td class="num">0.144640083559380905 <span class="dim">("block+1")</span></td><td class="k">match (0 wei)</td></tr>
+<tr><td><a href="https://bscscan.com/block/127067714" target="_blank">127,067,714</a></td><td>one block later (control read)</td><td class="num">144640083559380905</td><td class="num">0.144640083559380905</td><td class="dim">—</td><td class="dim">same state</td></tr>
+<tr><td><a href="https://bscscan.com/block/127261245" target="_blank">127,261,245</a></td><td>just before the 10-12 buy</td><td class="num">142613528959380905</td><td class="num">0.142613528959380905</td><td class="num">0.142613528959380905 <span class="dim">("block-1")</span></td><td class="k">match (0 wei)</td></tr>
+<tr><td><a href="https://bscscan.com/block/127261246" target="_blank">127,261,246</a></td><td>after the 10-12 buy</td><td class="num">132607152559380905</td><td class="num">0.132607152559380905</td><td class="num">0.132607152559380905 <span class="dim">("treasury now")</span></td><td class="k">match (0 wei)</td></tr>
+</table>
+
+<h2>2. Every transaction the treasury sent in the window (14)</h2>
+<p>Window = blocks 127,067,714 – 127,261,245 (strictly between the two buy txs). All 14 are outgoing from the treasury; all succeeded. Gas price is a uniform 0.05 gwei on every tx.</p>
+<table>
+<tr><th>#</th><th>Block</th><th>Time (UTC)</th><th>Tx</th><th>To (tx)</th><th>FLAPJAX moved (recipient)</th><th>BNB value</th><th>Gas used</th><th>Gas fee (BNB)</th></tr>
+<tr>
+<td>1</td>
+<td><a href="https://bscscan.com/block/127145974" target="_blank">127145974</a></td>
+<td class="nowrap">2026-10-12 04:20:42</td>
+<td><a href="https://bscscan.com/tx/0xffadd9467036e23f558df95338aad9ffcde86fcf3859fd09303a7d926b17817e" target="_blank" class="hash">0xffadd946…17817e</a></td>
+<td><span class="addr">0x90c8889f…9ac680df</span> <span class="dim">(FJ token)</span></td>
+<td>250000.000000000000000000 → <span class="addr">0x5047384c…e39c793f</span></td>
+<td class="num">0.000000000000000000</td>
+<td class="num">53,708</td>
+<td class="num">0.000002685400000000</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="https://bscscan.com/block/127145984" target="_blank">127145984</a></td>
+<td class="nowrap">2026-10-12 04:20:47</td>
+<td><a href="https://bscscan.com/tx/0xef4805a7b386055c1aac60c28fa4267190c335aeaae04217a50c705004d98afc" target="_blank" class="hash">0xef4805a7…d98afc</a></td>
+<td><span class="addr">0x90c8889f…9ac680df</span> <span class="dim">(FJ token)</span></td>
+<td>500000.000000000000000000 → <span class="addr">0x5047384c…e39c793f</span></td>
+<td class="num">0.000000000000000000</td>
+<td class="num">36,608</td>
+<td class="num">0.000001830400000000</td>
+</tr>
+<tr>
+<td>3</td>
+<td><a href="https://bscscan.com/block/127145995" target="_blank">127145995</a></td>
+<td class="nowrap">2026-10-12 04:20:52</td>
+<td><a href="https://bscscan.com/tx/0x34a2f8ed9f9db71698d9881e09387ba2bc1997b250b9e7811e3fd737b8f84d50" target="_blank" class="hash">0x34a2f8ed…f84d50</a></td>
+<td><span class="addr">0x90c8889f…9ac680df</span> <span class="dim">(FJ token)</span></td>
+<td>500000.000000000000000000 → <span class="addr">0x5047384c…e39c793f</span></td>
+<td class="num">0.000000000000000000</td>
+<td class="num">36,608</td>
+<td class="num">0.000001830400000000</td>
+</tr>
+<tr class="grant">
+<td>4</td>
+<td><a href="https://bscscan.com/block/127220237" target="_blank">127220237</a></td>
+<td class="nowrap">2026-10-12 13:38:38</td>
+<td><a href="https://bscscan.com/tx/0xc2193a974bf92cb1f908dbfa537c4a21b347a6498f2a46c61c8b48e88e5e9cdd" target="_blank" class="hash">0xc2193a97…5e9cdd</a></td>
+<td><span class="addr">0x9486b330…15b3759e</span> <em>(escrow)</em></td>
+<td></td>
+<td class="num">0.002000000000000000</td>
+<td class="num">21,000</td>
+<td class="num">0.000001050000000000</td>
+</tr>
+<tr>
+<td>5</td>
+<td><a href="https://bscscan.com/block/127220254" target="_blank">127220254</a></td>
+<td class="nowrap">2026-10-12 13:38:45</td>
+<td><a href="https://bscscan.com/tx/0x9df9a7a9552f8d28c38f9434b9546838b6614f8d8639f8cb39a84780beb22bd5" target="_blank" class="hash">0x9df9a7a9…b22bd5</a></td>
+<td><span class="addr">0x90c8889f…9ac680df</span> <span class="dim">(FJ token)</span></td>
+<td>80000.000000000000000000 → <span class="addr">0x8c062dc5…2f53dcdf</span> <em>(auditor's own wallet)</em></td>
+<td class="num">0.000000000000000000</td>
+<td class="num">36,596</td>
+<td class="num">0.000001829800000000</td>
+</tr>
+<tr>
+<td>6</td>
+<td><a href="https://bscscan.com/block/127220342" target="_blank">127220342</a></td>
+<td class="nowrap">2026-10-12 13:39:25</td>
+<td><a href="https://bscscan.com/tx/0xdc2b35954374fc028058700f8feadb98d85b9c2b391c185bc5c2846be6f77f01" target="_blank" class="hash">0xdc2b3595…f77f01</a></td>
+<td><span class="addr">0x90c8889f…9ac680df</span> <span class="dim">(FJ token)</span></td>
+<td>500000.000000000000000000 → <span class="addr">0x8c062dc5…2f53dcdf</span> <em>(auditor's own wallet)</em></td>
+<td class="num">0.000000000000000000</td>
+<td class="num">36,608</td>
+<td class="num">0.000001830400000000</td>
+</tr>
+<tr>
+<td>7</td>
+<td><a href="https://bscscan.com/block/127220352" target="_blank">127220352</a></td>
+<td class="nowrap">2026-10-12 13:39:29</td>
+<td><a href="https://bscscan.com/tx/0x25f0688f5eee0421e373dafe0d7c142d411df46f591b062f8a8ab2ff80160f78" target="_blank" class="hash">0x25f0688f…160f78</a></td>
+<td><span class="addr">0x90c8889f…9ac680df</span> <span class="dim">(FJ token)</span></td>
+<td>250000.000000000000000000 → <span class="addr">0x8c062dc5…2f53dcdf</span> <em>(auditor's own wallet)</em></td>
+<td class="num">0.000000000000000000</td>
+<td class="num">36,608</td>
+<td class="num">0.000001830400000000</td>
+</tr>
+<tr>
+<td>8</td>
+<td><a href="https://bscscan.com/block/127220361" target="_blank">127220361</a></td>
+<td class="nowrap">2026-10-12 13:39:33</td>
+<td><a href="https://bscscan.com/tx/0xe5e1c5cce7b617a7313d9580dcf43a10001f22df39af939595e5b0de40680542" target="_blank" class="hash">0xe5e1c5cc…680542</a></td>
+<td><span class="addr">0x90c8889f…9ac680df</span> <span class="dim">(FJ token)</span></td>
+<td>2000000.000000000000000000 → <span class="addr">0x8c062dc5…2f53dcdf</span> <em>(auditor's own wallet)</em></td>
+<td class="num">0.000000000000000000</td>
+<td class="num">36,608</td>
+<td class="num">0.000001830400000000</td>
+</tr>
+<tr>
+<td>9</td>
+<td><a href="https://bscscan.com/block/127220370" target="_blank">127220370</a></td>
+<td class="nowrap">2026-10-12 13:39:37</td>
+<td><a href="https://bscscan.com/tx/0x99f9709a02f73985710b681c605bc95595b1de91f4989b83f993928cc6e4b28d" target="_blank" class="hash">0x99f9709a…e4b28d</a></td>
+<td><span class="addr">0x90c8889f…9ac680df</span> <span class="dim">(FJ token)</span></td>
+<td>250000.000000000000000000 → <span class="addr">0x4a6419ee…743c1e1e</span></td>
+<td class="num">0.000000000000000000</td>
+<td class="num">36,608</td>
+<td class="num">0.000001830400000000</td>
+</tr>
+<tr>
+<td>10</td>
+<td><a href="https://bscscan.com/block/127220380" target="_blank">127220380</a></td>
+<td class="nowrap">2026-10-12 13:39:42</td>
+<td><a href="https://bscscan.com/tx/0x2b9e350db56f6aac54ad7bd44837fb1f3e3e0458e7af5b1d82c03bae48b8fc8a" target="_blank" class="hash">0x2b9e350d…b8fc8a</a></td>
+<td><span class="addr">0x90c8889f…9ac680df</span> <span class="dim">(FJ token)</span></td>
+<td>250000.000000000000000000 → <span class="addr">0x4a6419ee…743c1e1e</span></td>
+<td class="num">0.000000000000000000</td>
+<td class="num">36,608</td>
+<td class="num">0.000001830400000000</td>
+</tr>
+<tr>
+<td>11</td>
+<td><a href="https://bscscan.com/block/127220390" target="_blank">127220390</a></td>
+<td class="nowrap">2026-10-12 13:39:46</td>
+<td><a href="https://bscscan.com/tx/0x12677707569e24cfa728878b46ff4e895fb894da4b39d59f618ab55c9820cc4e" target="_blank" class="hash">0x12677707…20cc4e</a></td>
+<td><span class="addr">0x90c8889f…9ac680df</span> <span class="dim">(FJ token)</span></td>
+<td>500000.000000000000000000 → <span class="addr">0x4a6419ee…743c1e1e</span></td>
+<td class="num">0.000000000000000000</td>
+<td class="num">36,608</td>
+<td class="num">0.000001830400000000</td>
+</tr>
+<tr>
+<td>12</td>
+<td><a href="https://bscscan.com/block/127220507" target="_blank">127220507</a></td>
+<td class="nowrap">2026-10-12 13:40:39</td>
+<td><a href="https://bscscan.com/tx/0xbc92eaf19ab0c57ab6738532d998591146935ff8d14e3903cb7dae2743030b71" target="_blank" class="hash">0xbc92eaf1…030b71</a></td>
+<td><span class="addr">0x90c8889f…9ac680df</span> <span class="dim">(FJ token)</span></td>
+<td>250000.000000000000000000 → <span class="addr">0x5c7a7954…720d2358</span></td>
+<td class="num">0.000000000000000000</td>
+<td class="num">36,608</td>
+<td class="num">0.000001830400000000</td>
+</tr>
+<tr>
+<td>13</td>
+<td><a href="https://bscscan.com/block/127221307" target="_blank">127221307</a></td>
+<td class="nowrap">2026-10-12 13:46:40</td>
+<td><a href="https://bscscan.com/tx/0xea9a5fbcaa21ca5f70f17885a3771145b86c002b22a51d60b3fde4dc43565d92" target="_blank" class="hash">0xea9a5fbc…565d92</a></td>
+<td><span class="addr">0x90c8889f…9ac680df</span> <span class="dim">(FJ token)</span></td>
+<td>100000.000000000000000000 → <span class="addr">0x5c7a7954…720d2358</span></td>
+<td class="num">0.000000000000000000</td>
+<td class="num">36,608</td>
+<td class="num">0.000001830400000000</td>
+</tr>
+<tr>
+<td>14</td>
+<td><a href="https://bscscan.com/block/127229962" target="_blank">127229962</a></td>
+<td class="nowrap">2026-10-12 14:51:36</td>
+<td><a href="https://bscscan.com/tx/0xa5b52de36c7a9167ec2c64a6f49af704e07deddd16a41328f0ade85c9c396837" target="_blank" class="hash">0xa5b52de3…396837</a></td>
+<td><span class="addr">0x90c8889f…9ac680df</span> <span class="dim">(FJ token)</span></td>
+<td>100000.000000000000000000 → <span class="addr">0xfd5efa5c…0318c5d2</span></td>
+<td class="num">0.000000000000000000</td>
+<td class="num">53,708</td>
+<td class="num">0.000002685400000000</td>
+</tr>
+<tr class="total"><td colspan="6">Sums (14 txs)</td><td class="num">0.002000000000000000</td><td class="num">531,092</td><td class="num">0.000026554600000000</td></tr>
+</table>
+<p class="dim">Highlighted row = the plain BNB transfer (no token logs). The 13 remaining txs each call <code>transfer</code> (0xa9059cbb) on the FLAPJAX token <code>0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df</code>; the tx-level "to" is the token contract, the recipient is in the Transfer log.</p>
+
+<h3>FLAPJAX moved — per recipient</h3>
+<table>
+<tr><th>Recipient</th><th>Txs</th><th>FLAPJAX</th></tr>
+<tr>
+<td><span class="addr">0x5047384cdb02d1117abece1f7a01d2b0e39c793f</span></td>
+<td class="num">3</td>
+<td class="num">1250000.000000000000000000</td>
+</tr>
+<tr>
+<td><span class="addr">0x8c062dc5d775b7d5efc168f75a875f392f53dcdf</span> <em>(auditor's own wallet — disclosed)</em></td>
+<td class="num">4</td>
+<td class="num">2830000.000000000000000000</td>
+</tr>
+<tr>
+<td><span class="addr">0x4a6419ee9666acaa6755fc0aebb27f48743c1e1e</span></td>
+<td class="num">3</td>
+<td class="num">1000000.000000000000000000</td>
+</tr>
+<tr>
+<td><span class="addr">0x5c7a79549e4413a52b1787b5c7e10368720d2358</span></td>
+<td class="num">2</td>
+<td class="num">350000.000000000000000000</td>
+</tr>
+<tr>
+<td><span class="addr">0xfd5efa5c47fb3be071b2fd38fc88dfa30318c5d2</span></td>
+<td class="num">1</td>
+<td class="num">100000.000000000000000000</td>
+</tr>
+<tr class="total"><td>Total</td><td class="num">13</td><td class="num">5530000.000000000000000000</td></tr>
+</table>
+
+<h2>3. Groups and sums</h2>
+<table>
+<tr><th>Group</th><th>Txs</th><th>BNB value</th><th>Fees</th><th>Notes</th></tr>
+<tr><td><strong>Bounty payouts</strong></td><td class="num">13</td><td class="num">0.000000000000000000</td><td class="num">0.000025504600000000</td><td>FLAPJAX transfers to 5 addresses, 5530000.000000000000000000 FJ total</td></tr>
+<tr><td><strong>Gas grants</strong></td><td class="num">1</td><td class="num">0.002000000000000000</td><td class="num">0.000001050000000000</td><td>plain BNB transfer to escrow <span class="addr">0x9486b330…15b3759e</span> (the escrow address used in the public E001 escrow thread), sent 7 seconds before the payout batch</td></tr>
+<tr><td><strong>Bridges</strong></td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td>none in window</td></tr>
+<tr><td><strong>Other</strong></td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td>none in window</td></tr>
+<tr class="total"><td>Total non-buy BNB out</td><td class="num">14</td><td class="num">0.002000000000000000</td><td class="num">0.000026554600000000</td><td><strong>0.002026554600000000 BNB</strong></td></tr>
+</table>
+
+<h2>4. The balance equation (to the wei)</h2>
+<pre><code>balance just after 10-11 buy (end of block 127067713)   = 144640083559380905 wei
+  - sum of BNB value sent in window                    = -2000000000000000 wei
+  - sum of gas fees paid in window                     = -26554600000000 wei
+  + BNB received in window (none; no inbound tx)       = +0 wei
+  ---------------------------------------------------------------
+  = 142613528959380905 wei
+balance just before 10-12 buy (end of block 127261245) = 142613528959380905 wei
+                                                         gap = 0 wei  ✅ exact</code></pre>
+<p>Extra check — the closing buy itself also closes exactly:</p>
+<pre><code>balance before 10-12 buy                               = 142613528959380905 wei
+  - 10-12 buy (0.01 BNB value + 6376400000000 wei fee)  = -10006376400000000 wei
+  = 132607152559380905 wei
+balance after 10-12 buy (end of block 127261246)       = 132607152559380905 wei
+                                                         gap = 0 wei  ✅ exact</code></pre>
+
+<h2>5. The two boundary buys (context, excluded from the sums)</h2>
+<table>
+<tr><th>Buy</th><th>Block</th><th>Time (UTC)</th><th>Tx</th><th>BNB value</th><th>Gas fee</th><th>FLAPJAX</th></tr>
+<tr>
+<td>buy-10-11</td>
+<td><a href="https://bscscan.com/block/127067713" target="_blank">127067713</a></td>
+<td class="nowrap">2026-10-11 18:30:35</td>
+<td><a href="https://bscscan.com/tx/0x82d01172ae26f1c86287643e123af1675ca5c18b984b7740c1a0c1647d2801eb" target="_blank" class="hash">0x82d01172…2801eb</a></td>
+<td class="num">0.010000000000000000</td>
+<td class="num">0.000006377700000000</td>
+<td>+ 23907253.965589989685035768 FJ received</td>
+</tr>
+<tr>
+<td>buy-10-12</td>
+<td><a href="https://bscscan.com/block/127261246" target="_blank">127261246</a></td>
+<td class="nowrap">2026-10-12 18:46:27</td>
+<td><a href="https://bscscan.com/tx/0x9afdc96e3ca876b5b617a26ba5105012ed8c33e805c77b1616bf48c198d5cbf1" target="_blank" class="hash">0x9afdc96e…d5cbf1</a></td>
+<td class="num">0.010000000000000000</td>
+<td class="num">0.000006376400000000</td>
+<td>+ 23834879.521763892137228328 FJ received</td>
+</tr>
+</table>
+
+<h2>6. FLAPJAX side (bonus reconciliation)</h2>
+<pre><code>treasury FLAPJAX @127067713 = 237237297806810631976334347
+treasury FLAPJAX @127261245 = 231707297806810631976334347
+delta over window           = -5530000000000000000000000  (== sum of the 13 Transfer logs: 5530000000000000000000000)  ✅
+treasury FLAPJAX @127261246 = 255542177328574524113562675
+receipt claim ("treasury now ... FLAPJAX") = 255542177328574524113562675  →  diff 0 wei  ✅ exact</code></pre>
+
+<h2>7. Comparison with the receipt line — group by group</h2>
+<p>Receipt line under audit: <em>"Non-buy BNB out since last receipt: 0.000025 fees"</em>.</p>
+<table>
+<tr><th>Item</th><th>Chain (this audit)</th><th>Receipt line</th><th>Verdict</th></tr>
+<tr><td>Total non-buy BNB out (value + fees)</td><td class="num">0.002026554600000000</td><td class="num">0.000025</td><td class="x">MISMATCH — understated by 0.002001554600000000 (missing the 0.002 gas grant)</td></tr>
+<tr><td>Gas grants group (BNB value)</td><td class="num">0.002000000000000000</td><td class="dim">not mentioned</td><td class="x">MISMATCH — omitted entirely</td></tr>
+<tr><td>Bounty payouts group (BNB value)</td><td class="num">0.000000000000000000</td><td class="dim">not mentioned</td><td class="k">consistent (no BNB value in this group)</td></tr>
+<tr><td>Fees, all 14 window txs</td><td class="num">0.000026554600000000</td><td class="num">0.000025</td><td class="x">MISMATCH — understated by 0.000001554600000000</td></tr>
+<tr><td>Fees, payout group only (closest reading of the stated number)</td><td class="num">0.000025504600000000</td><td class="num">0.000025</td><td class="x">MISMATCH — off by 0.000000504600000000</td></tr>
+<tr><td>Bridges</td><td class="dim">none in window</td><td class="dim">not mentioned</td><td class="k">n/a</td></tr>
+<tr><td>Balance after 10-11 buy</td><td class="num">0.144640083559380905</td><td class="num">0.144640083559380905</td><td class="k">MATCH (0 wei)</td></tr>
+<tr><td>Balance before 10-12 buy</td><td class="num">0.142613528959380905</td><td class="num">0.142613528959380905</td><td class="k">MATCH (0 wei)</td></tr>
+<tr><td>Balance after 10-12 buy</td><td class="num">0.132607152559380905</td><td class="num">0.132607152559380905</td><td class="k">MATCH (0 wei)</td></tr>
+<tr><td>FLAPJAX after 10-12 buy</td><td class="num">255542177328574524113562675</td><td class="num">255542177328574524113562675</td><td class="k">MATCH (0 wei)</td></tr>
+</table>
+<p><strong>Conclusion.</strong> The reconciliation the receipt asks for holds <strong>to the wei</strong>: the balance just after the 10-11 buy, minus every BNB outflow in the window (value and gas), equals the balance just before the 10-12 buy exactly (no BNB in). Every transaction is a bounty payout (FLAPJAX) or a gas grant (0.002 BNB to the escrow address). The one wrong item is the line itself: <strong>"0.000025 fees" should have read 0.0020265546 (value + fees)</strong> — or at minimum, the fees figure 0.0000265546 — and the 0.002 gas grant should have been itemised. Stated as a gap: <strong>0.0020015546 BNB unaccounted on the receipt line</strong> (0.002 grant + 0.0000015546 fee understatement).</p>
+
+<h2>8. Re-check it yourself</h2>
+<pre><code># any public BSC archive node; this audit used https://bsc-mainnet.nodereal.io/v1/64a9df0874fb4a93b9d0a3849de012d3
+# balances (wei) at pinned blocks:
+curl -s -X POST $RPC -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"eth_getBalance","params":["0x7c34e9e21ee28a49ff0b84b61774119e6633359f","0x792E641"]}'
+#   -> 0x201dd63c0d6f7a9 = 144640083559380905
+curl -s -X POST $RPC -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"eth_getBalance","params":["0x7c34e9e21ee28a49ff0b84b61774119e6633359f","0x795DA3D"]}'
+#   -> 0x1faaa3fbdc9eda9 = 142613528959380905
+curl -s -X POST $RPC -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"eth_getBalance","params":["0x7c34e9e21ee28a49ff0b84b61774119e6633359f","0x795DA3E"]}'
+#   -> 0x1d71d80aefa59a9 = 132607152559380905
+# each tx: eth_getTransactionByHash / eth_getTransactionReceipt (value, gasUsed, effectiveGasPrice=50000000, logs)
+# FLAPJAX balance: eth_call balanceOf(0x7c34e9e21ee28a49ff0b84b61774119e6633359f) on 0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df at block 127261246 -> 255542177328574524113562675
+</code></pre>
+<p class="dim">Completeness note: the treasury's BscScan tx list was also swept for the full surrounding range (blocks 126,907,507–127,425,328, 50 txs, 100% outgoing) — every tx between the two buys is in the table above, and the balance equation closing to the wei is the independent proof that nothing is missing (any missed outflow would break it).</p>
+
+<h2>9. Files & disclosure</h2>
+<ul>
+<li>Raw machine-readable data: <a href="raw.json">raw.json</a> · audit script: <a href="audit.mjs">audit.mjs</a> (reads only, no keys).</li>
+<li>Disclosure: the auditor's own BSC wallet <code>0x8c062dc5d775b7d5efc168f75a875f392f53dcdf</code> is among the payout recipients in the window (4 txs, 2,830,000 FLAPJAX, all with 0 BNB value; their gas fees are included in the sums above). This does not affect the BNB arithmetic and is stated for transparency.</li>
+<li>Task reference: FlapJax Receipt Relay Q23 (Colony post 6f516359 · Taskmarket TSK-6BQ1EHZR). Receipt under audit: buyback thread comment 9f6ccf0a (2026-10-12 18:47:07 UTC).</li>
+</ul>
+
+</main>
+</body>
+</html>
