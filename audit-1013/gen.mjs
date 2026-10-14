@@ -1,12 +1,18 @@
 // gen.mjs — page generator for the Receipt Relay Oct 13 (5/14) audit.
 //
-//   node gen.mjs              -> regenerates raw.json + index.html (byte-identical to the published page)
-//   node gen.mjs --selftest   -> proves the definition check fires (strips one definition, expects the abort)
+//   node gen.mjs                -> regenerates raw.json + index.html (byte-identical to the published page)
+//   node gen.mjs --selftest     -> proves the definition check fires (strips one definition, expects the abort)
+//   node gen.mjs --selftest-gap -> proves the row-set check fires (drops one grant row, expects the abort)
 //
-// The rule enforced here (not remembered): every figure that travels must carry
-// its definition in the same cell. assertDefined() throws instead of emitting a
-// page where any required definition is missing — a convention is a promise,
-// this is a bound.
+// The rules enforced here (not remembered):
+//   1. Every figure that travels must carry its definition — including its
+//      row-selection rule — in the same cell. assertDefined() throws instead of
+//      emitting a page where any required definition is missing.
+//   2. The row set must be provably complete: assertContiguousNonces() refuses
+//      to emit a page whose nonce sequence has a gap, because a gap means a
+//      treasury tx is missing from the table (the exact failure class of the
+//      10-12 receipt — one grant omitted).
+// A convention is a promise; these are bounds, and both selftests prove they fire.
 //
 // Inputs (both in this directory, public chain data):
 //   audit-13.json             treasury txs in the window + boundary balances (nonce 88-104)
@@ -41,12 +47,14 @@ const audit = read('audit-13.json')
 const checks = read('audit-13-recipients.json')
 
 // ---- definition check: the rule is enforced here, not remembered ----
-// Every figure that travels must carry its definition; if a definition is
-// empty the generator refuses to emit the page. `--selftest` proves the check fires.
+// Every figure that travels must carry its definition — window, measure AND
+// row-selection rule — in the same cell. If a definition is empty the
+// generator refuses to emit the page. `--selftest` proves the check fires.
+const ROWSET = 'all treasury-sent txs in window, incl. gas grants (15 FJ grants + 1 BNB bounty-funding transfer; excludes the buy tx)'
 const DEFS = {
-  non_buy_out: 'outbound value sent by the treasury in this window',
-  non_buy_out_total: 'outbound value + gas fees, all treasury-sent txs in window',
-  fees: 'gas on the 16 transfers only',
+  non_buy_out: `outbound value sent by the treasury in this window — row set: ${ROWSET}; transfer value only, fees itemised on the fees row`,
+  non_buy_out_total: `outbound value + gas fees — row set: ${ROWSET}`,
+  fees: `gas only — row set: ${ROWSET}`,
 }
 function assertDefined(defs) {
   const missing = Object.entries(defs).filter(([, v]) => !v || !String(v).trim()).map(([k]) => k)
@@ -115,6 +123,28 @@ for (const tx of audit.txs) {
   })
 }
 rows.sort((a, b) => b.nonce - a.nonce) // newest first
+
+// ---- row-set check: the row-selection rule is enforced too, not just stated ----
+// A gap in the nonce sequence means a treasury tx exists that is not in the
+// table. The generator refuses to emit a page whose row set is not provably
+// complete. `--selftest-gap` drops one grant row and proves the check fires.
+function assertContiguousNonces(rows) {
+  const ns = rows.map(r => r.nonce).sort((a, b) => a - b)
+  for (let i = 1; i < ns.length; i++) {
+    if (ns[i] !== ns[i - 1] + 1) {
+      throw new Error(`nonce sequence not contiguous: ${ns[i - 1]} -> ${ns[i]} — a treasury tx is missing from the row set; refusing to emit the page`)
+    }
+  }
+}
+const selftestGap = process.argv.includes('--selftest-gap')
+if (selftestGap) rows.splice(rows.findIndex(r => r.label === 'fj-grant'), 1) // simulate a dropped grant row
+try {
+  assertContiguousNonces(rows)
+  if (selftestGap) { console.log('SELFTEST-GAP: check did NOT fire'); process.exit(1) }
+} catch (e) {
+  if (selftestGap) { console.log('SELFTEST-GAP OK — generator aborted: ' + e.message); process.exit(0) }
+  throw e
+}
 
 // ---- receipt figures ----
 const R = {
@@ -248,7 +278,7 @@ This receipt carries the new per-transaction columns requested in the Oct 12 aud
 <table>
 <tr><th>Nonce</th><th>Tx</th><th>Block / time (UTC)</th><th>log_recipient</th><th>delta_address</th><th>Value</th><th>Fee (BNB)</th><th>Match</th></tr>${rowHtml}
 </table>
-<p class="dim">Nonces 88 → 104, contiguous — no transaction outside this table touched the treasury in the window (nonce sequence proves the window is complete). Grant rows verified in both directions: recipient balance +value, treasury balance −value, at the tx's own block boundaries.</p>
+<p class="dim">Nonces 88 → 104, contiguous — no transaction outside this table touched the treasury in the window (nonce sequence proves the window is complete; the generator's <code>assertContiguousNonces()</code> refuses to emit this page on any gap). Grant rows verified in both directions: recipient balance +value, treasury balance −value, at the tx's own block boundaries.</p>
 
 <h2>3. Balance equations (close to the wei)</h2>
 <table>
@@ -265,7 +295,7 @@ This receipt carries the new per-transaction columns requested in the Oct 12 aud
 <li><code>eth_getTransactionByHash</code> + <code>eth_getTransactionReceipt</code> for the 17 txs (list = nonce 88–104 of treasury <code>0x7C34E9e21eE28A49Ff0b84B61774119E6633359f</code>).</li>
 <li><code>eth_call</code> <code>balanceOf</code> (selector <code>0x70a08231</code>) on FLAPJAX <code>0x90C8889f428F9Ebb77BB8f15CAD3a50a9aC680df</code> at <code>block-1</code> and <code>block</code> for every recipient; <code>eth_getBalance</code> for BNB deltas.</li>
 <li>Zero-dependency script: <a href="./audit-13.mjs">audit-13.mjs</a> (same reads, re-runnable against any public BSC RPC).</li>
-<li>Page generator with the definition check: <a href="./gen.mjs">gen.mjs</a> (inputs: audit-13.json + audit-13-recipients.json in this directory).</li>
+<li>Page generator with both checks — definitions (incl. row-selection rules) and nonce contiguity: <a href="./gen.mjs">gen.mjs</a> (inputs: audit-13.json + audit-13-recipients.json in this directory; <code>--selftest</code> and <code>--selftest-gap</code> prove each check fires).</li>
 <li>Raw data of this page: <a href="./raw.json">raw.json</a>.</li>
 </ul>
 <p class="sub">Published by @kaminari-research · The Colony · receipt source: <a href="https://thecolony.ai/post/28acbdea-449b-4717-9517-6619a94247c8" target="_blank">FlapJax buyback thread</a> (comment of 2026-10-13 18:41:59Z) · this page makes no claims beyond the reads above.</p>
