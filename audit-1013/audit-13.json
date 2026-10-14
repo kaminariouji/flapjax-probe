@@ -1,0 +1,331 @@
+{
+ "window": {
+  "fromBlock": 127261247,
+  "toBlock": 127452454,
+  "buy12": "0x9afdc96e3ca876b5b617a26ba5105012ed8c33e805c77b1616bf48c198d5cbf1"
+ },
+ "txs": [
+  {
+   "hash": "0xc94de373d1fb00093431224a97475b3b2b48b9a4962d15acbe9d9c5c016d720c",
+   "block": 127452454,
+   "label": "buy-13",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x1b81d678ffb9c0263b24a97847620c99d213eb14",
+   "value": "0x2386f26fc10000",
+   "nonce": "0x68",
+   "gasUsed": "127526",
+   "effGasPrice": "50000000",
+   "fee": "6376300000000",
+   "fjLogs": [
+    {
+     "from": "0xca93ec685b8623688e6b236f9068034b298c2150",
+     "to": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+     "value": "23762833230024087278551319"
+    }
+   ]
+  },
+  {
+   "hash": "0x6f2e58767d9fcba28bba77ab1835bc70050698588a9d65606cb46cbe30c2cb8e",
+   "block": 127425328,
+   "label": "out-lifi",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x1231deb6f5749ef6ce6943a275a1d3e7486f4eae",
+   "value": "0xf44cf7df4f071",
+   "nonce": "0x67",
+   "gasUsed": "99498",
+   "effGasPrice": "50000000",
+   "fee": "4974900000000",
+   "fjLogs": []
+  },
+  {
+   "hash": "0xe50a053ba822eb138248f0f5a8c791e14df21b57eef5c54993b011a79b4d3712",
+   "block": 127412852,
+   "label": "fj-grant",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+   "value": "0x0",
+   "nonce": "0x66",
+   "gasUsed": "36608",
+   "effGasPrice": "50000000",
+   "fee": "1830400000000",
+   "fjLogs": [
+    {
+     "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+     "to": "0x078293f144c61d1e02b49d4cd3f33c283eb7dc73",
+     "value": "500000000000000000000000"
+    }
+   ]
+  },
+  {
+   "hash": "0x0a7c57859d00271a28d1708d2265b115b2ae80c1be6d508790a76fe179cdc3d9",
+   "block": 127412841,
+   "label": "fj-grant",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+   "value": "0x0",
+   "nonce": "0x65",
+   "gasUsed": "36596",
+   "effGasPrice": "50000000",
+   "fee": "1829800000000",
+   "fjLogs": [
+    {
+     "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+     "to": "0x3d650013f46dd2d96b5afefe4acab7a7f2727561",
+     "value": "500000000000000000000000"
+    }
+   ]
+  },
+  {
+   "hash": "0x72c700f37d5ea37212407a4c36233db108c3b590c009b3b4db371903367d4137",
+   "block": 127412832,
+   "label": "fj-grant",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+   "value": "0x0",
+   "nonce": "0x64",
+   "gasUsed": "36608",
+   "effGasPrice": "50000000",
+   "fee": "1830400000000",
+   "fjLogs": [
+    {
+     "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+     "to": "0x078293f144c61d1e02b49d4cd3f33c283eb7dc73",
+     "value": "250000000000000000000000"
+    }
+   ]
+  },
+  {
+   "hash": "0x7db3af68ebc249ef90803c3d0dd1b42fccb1f9487af281f4fb6aab0962b3f45e",
+   "block": 127412822,
+   "label": "fj-grant",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+   "value": "0x0",
+   "nonce": "0x63",
+   "gasUsed": "53696",
+   "effGasPrice": "50000000",
+   "fee": "2684800000000",
+   "fjLogs": [
+    {
+     "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+     "to": "0x3d650013f46dd2d96b5afefe4acab7a7f2727561",
+     "value": "250000000000000000000000"
+    }
+   ]
+  },
+  {
+   "hash": "0x8de4d7fadf2e3e1425aa87884768605ea6d4c05bc2363910f3d0e605d832b0f8",
+   "block": 127412809,
+   "label": "fj-grant",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+   "value": "0x0",
+   "nonce": "0x62",
+   "gasUsed": "53708",
+   "effGasPrice": "50000000",
+   "fee": "2685400000000",
+   "fjLogs": [
+    {
+     "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+     "to": "0xcfa08d418f136cc2a14c791fcf7e37b30d237592",
+     "value": "250000000000000000000000"
+    }
+   ]
+  },
+  {
+   "hash": "0x977b9a50e0889ea42c0bac104806ce9f78cd7928b7b36957f45e5d952f2aa883",
+   "block": 127412765,
+   "label": "fj-grant",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+   "value": "0x0",
+   "nonce": "0x61",
+   "gasUsed": "53708",
+   "effGasPrice": "50000000",
+   "fee": "2685400000000",
+   "fjLogs": [
+    {
+     "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+     "to": "0x078293f144c61d1e02b49d4cd3f33c283eb7dc73",
+     "value": "250000000000000000000000"
+    }
+   ]
+  },
+  {
+   "hash": "0x81bb50ea99fb464db046d40de6b916108a88178f81d531d95e35d58b559de38f",
+   "block": 127412553,
+   "label": "fj-grant",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+   "value": "0x0",
+   "nonce": "0x60",
+   "gasUsed": "36608",
+   "effGasPrice": "50000000",
+   "fee": "1830400000000",
+   "fjLogs": [
+    {
+     "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+     "to": "0x8c062dc5d775b7d5efc168f75a875f392f53dcdf",
+     "value": "500000000000000000000000"
+    }
+   ]
+  },
+  {
+   "hash": "0xdf82dfa7b2e0cbbd7dba47aa90bf4a293696151402fb994c44880dd320c1f179",
+   "block": 127412542,
+   "label": "fj-grant",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+   "value": "0x0",
+   "nonce": "0x5f",
+   "gasUsed": "36608",
+   "effGasPrice": "50000000",
+   "fee": "1830400000000",
+   "fjLogs": [
+    {
+     "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+     "to": "0x8c062dc5d775b7d5efc168f75a875f392f53dcdf",
+     "value": "500000000000000000000000"
+    }
+   ]
+  },
+  {
+   "hash": "0x29baac818cb2cf3e1b7b5e9c36a8f6463033882522e2a9b7098f77c0c0a84515",
+   "block": 127412530,
+   "label": "fj-grant",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+   "value": "0x0",
+   "nonce": "0x5e",
+   "gasUsed": "36596",
+   "effGasPrice": "50000000",
+   "fee": "1829800000000",
+   "fjLogs": [
+    {
+     "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+     "to": "0x8c062dc5d775b7d5efc168f75a875f392f53dcdf",
+     "value": "1000000000000000000000000"
+    }
+   ]
+  },
+  {
+   "hash": "0xd0d3aa00a3bd8a80959f96acbc7c28fb8c18cb1964afa5616ab1b6aa8c5360d3",
+   "block": 127412508,
+   "label": "fj-grant",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+   "value": "0x0",
+   "nonce": "0x5d",
+   "gasUsed": "36608",
+   "effGasPrice": "50000000",
+   "fee": "1830400000000",
+   "fjLogs": [
+    {
+     "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+     "to": "0x4a6419ee9666acaa6755fc0aebb27f48743c1e1e",
+     "value": "250000000000000000000000"
+    }
+   ]
+  },
+  {
+   "hash": "0xc5cfcac79baa5725472d59c2605b11379ae91f4049071a4b5357f7b4a0b9e9e3",
+   "block": 127323048,
+   "label": "fj-grant",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+   "value": "0x0",
+   "nonce": "0x5c",
+   "gasUsed": "36608",
+   "effGasPrice": "50000000",
+   "fee": "1830400000000",
+   "fjLogs": [
+    {
+     "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+     "to": "0x5c7a79549e4413a52b1787b5c7e10368720d2358",
+     "value": "250000000000000000000000"
+    }
+   ]
+  },
+  {
+   "hash": "0x54c634d4a4ddba5a218f93fbb499bd930a0373b64ff70b0cc4592023bbaf1d54",
+   "block": 127304633,
+   "label": "fj-grant",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+   "value": "0x0",
+   "nonce": "0x5b",
+   "gasUsed": "53708",
+   "effGasPrice": "50000000",
+   "fee": "2685400000000",
+   "fjLogs": [
+    {
+     "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+     "to": "0xb6c06eb1a3f1a1ef155a2b48ea6b4f84e9c128f7",
+     "value": "250000000000000000000000"
+    }
+   ]
+  },
+  {
+   "hash": "0xf033ab9e274aa10b1bc009525311df735105bb3145c0f6ce04653dd4e3898ef5",
+   "block": 127291613,
+   "label": "fj-grant",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+   "value": "0x0",
+   "nonce": "0x5a",
+   "gasUsed": "53708",
+   "effGasPrice": "50000000",
+   "fee": "2685400000000",
+   "fjLogs": [
+    {
+     "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+     "to": "0x8b8543a9566b7c75e5484ce4385d76879eda2068",
+     "value": "100000000000000000000000"
+    }
+   ]
+  },
+  {
+   "hash": "0xb43a9cc0237b14d212341208968c6d78ebe86066824ebfeca071b48d483cc678",
+   "block": 127291603,
+   "label": "fj-grant",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+   "value": "0x0",
+   "nonce": "0x59",
+   "gasUsed": "53708",
+   "effGasPrice": "50000000",
+   "fee": "2685400000000",
+   "fjLogs": [
+    {
+     "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+     "to": "0xdd39d6532ece062f7a8f8f73fd84589480215bec",
+     "value": "100000000000000000000000"
+    }
+   ]
+  },
+  {
+   "hash": "0x13685c67345ed65b8cf7c6b3dc746d4917a9bfc31a6a451d5efd47a23c91128b",
+   "block": 127291593,
+   "label": "fj-grant",
+   "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+   "to": "0x90c8889f428f9ebb77bb8f15cad3a50a9ac680df",
+   "value": "0x0",
+   "nonce": "0x58",
+   "gasUsed": "53708",
+   "effGasPrice": "50000000",
+   "fee": "2685400000000",
+   "fjLogs": [
+    {
+     "from": "0x7c34e9e21ee28a49ff0b84b61774119e6633359f",
+     "to": "0xfc930b2d66d1d0e49e3b6d14df76acdd6ae7b05a",
+     "value": "100000000000000000000000"
+    }
+   ]
+  }
+ ],
+ "bal_pre-buy-12": "0x1faaa3fbdc9eda9",
+ "bal_pre-buy-13": "0x1c7b5c1363c7c38",
+ "bal_post-buy-13": "0x1a429022d62c938",
+ "fj_fj-pre-buy-13": "0x000000000000000000000000000000000000000000cf33c8247bbf57c1ac2c33",
+ "fj_fj-post-buy-13": "0x000000000000000000000000000000000000000000e2dbc1e9c31bedd955ad4a"
+}
