@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.12"/>
+    </filter>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e8d9bf" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="675" fill="#fff8ec"/>
+  <rect width="1200" height="675" fill="url(#grid)" opacity="0.55"/>
+
+  <text x="600" y="72" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="42" font-weight="700" fill="#2b1d0e">ONE OF THESE CAN BE CHECKED</text>
+  <text x="600" y="106" text-anchor="middle" font-family="system-ui, Segoe UI, Arial, sans-serif" font-size="19" fill="#7a6650" letter-spacing="1.5">COMPUTE IS CALORIES · RECEIPTS OVER ROCKETS</text>
+
+  <!-- LEFT: claim -->
+  <g filter="url(#shadow)">
+    <rect x="80" y="150" width="480" height="380" rx="14" fill="#ffffff" stroke="#e0c9a6" stroke-width="2"/>
+    <text x="112" y="196" font-family="system-ui, Segoe UI, Arial, sans-serif" font-size="16" letter-spacing="3" fill="#a08a6e">CLAIM</text>
+    <line x1="112" y1="214" x2="528" y2="214" stroke="#ead9bf" stroke-width="2"/>
+    <text x="112" y="258" font-family="'Courier New', monospace" font-size="23" fill="#2b1d0e">TVL $48,000,000</text>
+    <text x="112" y="300" font-family="'Courier New', monospace" font-size="23" fill="#2b1d0e">audited by CertiK</text>
+    <text x="112" y="342" font-family="'Courier New', monospace" font-size="23" fill="#2b1d0e">partnered with Binance</text>
+    <text x="112" y="384" font-family="'Courier New', monospace" font-size="23" fill="#2b1d0e">treasury holds 266M FJ</text>
+    <text x="112" y="440" font-family="system-ui, Segoe UI, Arial, sans-serif" font-size="16" fill="#a08a6e">source: a post</text>
+    <g transform="rotate(-7 320 492)">
+      <rect x="160" y="462" width="320" height="58" rx="6" fill="none" stroke="#c0392b" stroke-width="4"/>
+      <text x="320" y="501" text-anchor="middle" font-family="system-ui, Segoe UI, Arial, sans-serif" font-size="25" font-weight="800" fill="#c0392b" letter-spacing="1">BLOCKED</text>
+    </g>
+  </g>
+
+  <!-- RIGHT: receipt -->
+  <g filter="url(#shadow)">
+    <rect x="640" y="150" width="480" height="380" rx="14" fill="#ffffff" stroke="#b9d8b9" stroke-width="2"/>
+    <text x="672" y="196" font-family="system-ui, Segoe UI, Arial, sans-serif" font-size="16" letter-spacing="3" fill="#6f8f6f">RECEIPT</text>
+    <line x1="672" y1="214" x2="1088" y2="214" stroke="#d7e8d7" stroke-width="2"/>
+    <text x="672" y="258" font-family="'Courier New', monospace" font-size="20" fill="#2b1d0e">tx 0xc999...232156</text>
+    <text x="672" y="300" font-family="'Courier New', monospace" font-size="20" fill="#2b1d0e">0.01 BNB → 23,669,235 FJ</text>
+    <text x="672" y="342" font-family="'Courier New', monospace" font-size="20" fill="#2b1d0e">block 128,086,717</text>
+    <text x="672" y="384" font-family="'Courier New', monospace" font-size="20" fill="#2b1d0e">status success · slot0 +0.30%</text>
+    <text x="672" y="440" font-family="system-ui, Segoe UI, Arial, sans-serif" font-size="16" fill="#6f8f6f">source: the chain</text>
+    <g transform="rotate(6 880 492)">
+      <rect x="720" y="462" width="320" height="58" rx="6" fill="none" stroke="#2e7d32" stroke-width="4"/>
+      <text x="880" y="501" text-anchor="middle" font-family="system-ui, Segoe UI, Arial, sans-serif" font-size="25" font-weight="800" fill="#2e7d32" letter-spacing="1">VERIFIED</text>
+    </g>
+  </g>
+
+  <text x="600" y="598" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="24" fill="#2b1d0e">A claim is not a receipt. A receipt is not a meal.</text>
+  <text x="600" y="634" text-anchor="middle" font-family="system-ui, Segoe UI, Arial, sans-serif" font-size="16" fill="#7a6650">flapjax.surge.sh/skill.md · built by @kaminari-research</text>
+</svg>
